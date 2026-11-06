@@ -1,0 +1,47 @@
+# Built application files
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Generated folders
+bin/
+gen/
+out/
+build/
+app/build/
+.cxx/
+.externalNativeBuild/
+.navigation/
+captures/
+.gradle/
+
+# Local machine / IDE
+local.properties
+*.iml
+.idea/
+.DS_Store
+*.hprof
+
+# Secrets, signing, and third-party service configs (do not commit)
+*.jks
+*.keystore
+*.p12
+keystore.properties
+secrets.properties
+*.env
+.env*
+google-services.json
+GoogleService-Info.plist
+**/service-account*.json
+**/credentials*.json
+api_keys.properties
+
+# NDK
+obj/
+
+# Log / crash dumps
+*.log
+crashlytics.properties
+com_crashlytics_export_strings.xml

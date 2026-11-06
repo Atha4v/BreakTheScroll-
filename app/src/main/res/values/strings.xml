@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BreakTheScroll</string>
+    <string name="activities_title">Activities</string>
+    <string name="feed_for_you">For You</string>
+    <string name="feed_serendipity">Serendipity</string>
+    <string name="action_pass">Pass</string>
+    <string name="action_accept">Accept</string>
+    <string name="deck_empty_title">Deck cleared</string>
+    <string name="deck_empty_body">New micro-tasks will appear here soon. Take a breath offline.</string>
+</resources>
