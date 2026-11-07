@@ -24,23 +24,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.breakthescroll.app.ui.components.illustrations.ActivityHeroIllustration
 import com.breakthescroll.app.ui.model.ActivityChallenge
+import com.breakthescroll.app.ui.model.FeedMode
 import com.breakthescroll.app.ui.model.SampleActivityCatalog
 import com.breakthescroll.app.ui.theme.AcceptTint
-import com.breakthescroll.app.ui.theme.BorderSubtle
+import com.breakthescroll.app.ui.theme.BorderObsidian
 import com.breakthescroll.app.ui.theme.BreakTheScrollTheme
-import com.breakthescroll.app.ui.theme.ContainerWhite
+import com.breakthescroll.app.ui.theme.Obsidian
 import com.breakthescroll.app.ui.theme.PassCoral
-import com.breakthescroll.app.ui.theme.PrimaryEmerald
-import com.breakthescroll.app.ui.theme.PrimaryEmeraldContainer
-import com.breakthescroll.app.ui.theme.SecondaryAmber
-import com.breakthescroll.app.ui.theme.SecondaryAmberContainer
+import com.breakthescroll.app.ui.theme.SereneMint
+import com.breakthescroll.app.ui.theme.SereneMintContainer
+import com.breakthescroll.app.ui.theme.SoftFrost
+import com.breakthescroll.app.ui.theme.SoftFrostMuted
+import com.breakthescroll.app.ui.theme.WarmAmber
+import com.breakthescroll.app.ui.theme.WarmAmberContainer
 
 @Composable
 fun ActivityCard(
@@ -54,106 +57,118 @@ fun ActivityCard(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = ContainerWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        border = BorderStroke(1.dp, BorderSubtle),
+        colors = CardDefaults.cardColors(containerColor = Obsidian),
+        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+        border = BorderStroke(1.dp, BorderObsidian),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = PrimaryEmeraldContainer,
-                    ) {
-                        Text(
-                            text = challenge.category.label.uppercase(),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = PrimaryEmerald,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        )
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = SecondaryAmberContainer,
-                    ) {
-                        Text(
-                            text = "${challenge.durationMinutes} min",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = SecondaryAmber,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(28.dp))
-
+            Column(modifier = Modifier.fillMaxSize()) {
                 Box(
                     modifier = Modifier
-                        .size(72.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                listOf(PrimaryEmeraldContainer, Color(0xFFECFDF5)),
-                            ),
-                        ),
-                    contentAlignment = Alignment.Center,
+                        .fillMaxWidth()
+                        .height(168.dp)
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
                 ) {
-                    Icon(
-                        imageVector = challenge.icon,
-                        contentDescription = null,
-                        tint = PrimaryEmerald,
-                        modifier = Modifier.size(36.dp),
+                    ActivityHeroIllustration(
+                        kind = challenge.illustration,
+                        heroColors = challenge.heroColors,
+                        modifier = Modifier.fillMaxSize(),
                     )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = SereneMintContainer.copy(alpha = 0.92f),
+                        ) {
+                            Text(
+                                text = challenge.category.label.uppercase(),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = SereneMint,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            )
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = WarmAmberContainer.copy(alpha = 0.92f),
+                        ) {
+                            Text(
+                                text = "${challenge.durationMinutes} min",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = WarmAmber,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            )
+                        }
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(SereneMintContainer),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = challenge.icon,
+                                contentDescription = null,
+                                tint = SereneMint,
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                        Text(
+                            text = challenge.title,
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = SoftFrost,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
 
-                Text(
-                    text = challenge.title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = challenge.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SoftFrostMuted,
+                        maxLines = 4,
+                        overflow = TextOverflow.Ellipsis,
+                    )
 
-                Text(
-                    text = challenge.description,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 5,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                    Spacer(modifier = Modifier.weight(1f))
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                DifficultyDots(level = challenge.difficulty)
+                    DifficultyDots(level = challenge.difficulty)
+                }
             }
 
             SwipeDecisionStamp(
                 label = "ACCEPT",
                 color = AcceptTint,
                 alpha = acceptAlpha,
-                alignment = Alignment.TopStart,
+                alignment = Alignment.CenterStart,
                 rotation = -12f,
-                modifier = Modifier.padding(28.dp),
+                modifier = Modifier.padding(24.dp),
             )
             SwipeDecisionStamp(
                 label = "PASS",
                 color = PassCoral,
                 alpha = passAlpha,
-                alignment = Alignment.TopEnd,
+                alignment = Alignment.CenterEnd,
                 rotation = 12f,
-                modifier = Modifier.padding(28.dp),
+                modifier = Modifier.padding(24.dp),
             )
         }
     }
@@ -161,21 +176,22 @@ fun ActivityCard(
 
 @Composable
 private fun DifficultyDots(level: Int) {
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         repeat(3) { index ->
             Box(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (index < level) PrimaryEmerald else BorderSubtle,
-                    ),
+                    .background(if (index < level) SereneMint else BorderObsidian),
             )
         }
         Text(
             text = "Effort",
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = SoftFrostMuted,
             modifier = Modifier.padding(start = 4.dp),
         )
     }
@@ -207,12 +223,12 @@ private fun SwipeDecisionStamp(
     }
 }
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 480)
+@Preview(showBackground = true, backgroundColor = 0xFF0F172A, widthDp = 360, heightDp = 480)
 @Composable
 private fun ActivityCardPreview() {
     BreakTheScrollTheme {
         ActivityCard(
-            challenge = SampleActivityCatalog.forYou.first(),
+            challenge = SampleActivityCatalog.forMode(FeedMode.ForYou).first(),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(420.dp)

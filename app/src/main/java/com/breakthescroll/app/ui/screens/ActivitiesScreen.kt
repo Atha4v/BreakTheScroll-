@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -24,14 +23,19 @@ import androidx.compose.ui.unit.dp
 import com.breakthescroll.app.R
 import com.breakthescroll.app.ui.components.activitydeck.ActivityFlashCardDeck
 import com.breakthescroll.app.ui.components.activitydeck.FeedModeToggle
+import com.breakthescroll.app.ui.components.buddy.ScrollBuddyBanner
 import com.breakthescroll.app.ui.model.ActivityChallenge
+import com.breakthescroll.app.ui.model.BuddyMood
 import com.breakthescroll.app.ui.model.FeedMode
 import com.breakthescroll.app.ui.model.SampleActivityCatalog
 import com.breakthescroll.app.ui.theme.BreakTheScrollTheme
-import com.breakthescroll.app.ui.theme.SurfaceNeutral
+import com.breakthescroll.app.ui.theme.DeepSlate
+import com.breakthescroll.app.ui.theme.SoftFrost
+import com.breakthescroll.app.ui.theme.SoftFrostMuted
 
 @Composable
 fun ActivitiesScreen(
+    buddyMood: BuddyMood,
     modifier: Modifier = Modifier,
     onAccepted: (ActivityChallenge) -> Unit = {},
     onPassed: (ActivityChallenge) -> Unit = {},
@@ -42,15 +46,14 @@ fun ActivitiesScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(SurfaceNeutral)
-            .statusBarsPadding()
+            .background(DeepSlate)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
         Text(
             text = stringResource(R.string.activities_title),
             style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = SoftFrost,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -59,10 +62,14 @@ fun ActivitiesScreen(
                 FeedMode.Serendipity -> "Stochastic challenges to break autopilot scrolling."
             },
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = SoftFrostMuted,
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ScrollBuddyBanner(mood = buddyMood)
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         FeedModeToggle(
             selected = feedMode,
@@ -70,7 +77,7 @@ fun ActivitiesScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         ActivityFlashCardDeck(
             challenges = challenges,
@@ -79,14 +86,14 @@ fun ActivitiesScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(88.dp))
     }
 }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 840)
+@Preview(showBackground = true, backgroundColor = 0xFF0F172A, widthDp = 390, heightDp = 900)
 @Composable
 private fun ActivitiesScreenPreview() {
     BreakTheScrollTheme {
-        ActivitiesScreen()
+        ActivitiesScreen(buddyMood = BuddyMood.Idle)
     }
 }

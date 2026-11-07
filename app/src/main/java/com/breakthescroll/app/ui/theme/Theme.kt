@@ -1,38 +1,38 @@
 package com.breakthescroll.app.ui.theme
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 
-private val BreakTheScrollLightColors = lightColorScheme(
-    primary = PrimaryEmerald,
-    onPrimary = Color.White,
-    primaryContainer = PrimaryEmeraldContainer,
-    onPrimaryContainer = PrimaryEmeraldDark,
-    secondary = SecondaryAmber,
-    onSecondary = Color.White,
-    secondaryContainer = SecondaryAmberContainer,
-    onSecondaryContainer = Color(0xFF92400E),
-    tertiary = PrimaryEmeraldDark,
-    background = SurfaceNeutral,
-    onBackground = OnSurfacePrimary,
-    surface = ContainerWhite,
-    onSurface = OnSurfacePrimary,
-    surfaceVariant = SurfaceNeutral,
-    onSurfaceVariant = OnSurfaceSecondary,
-    outline = BorderSubtle,
-    outlineVariant = BorderSubtle,
+private val BreakTheScrollCalmColors = darkColorScheme(
+    primary = SereneMint,
+    onPrimary = DeepSlate,
+    primaryContainer = SereneMintContainer,
+    onPrimaryContainer = SoftFrost,
+    secondary = WarmAmber,
+    onSecondary = DeepSlate,
+    secondaryContainer = WarmAmberContainer,
+    onSecondaryContainer = SoftFrost,
+    tertiary = BuddyFox,
+    onTertiary = SoftFrost,
+    background = DeepSlate,
+    onBackground = SoftFrost,
+    surface = Obsidian,
+    onSurface = SoftFrost,
+    surfaceVariant = ObsidianElevated,
+    onSurfaceVariant = SoftFrostMuted,
+    outline = BorderObsidian,
+    outlineVariant = BorderObsidian,
     error = PassCoral,
-    onError = Color.White,
+    onError = DeepSlate,
     errorContainer = PassCoralContainer,
-    onErrorContainer = Color(0xFF7F1D1D),
+    onErrorContainer = SoftFrost,
 )
 
 @Composable
 fun BreakTheScrollTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = BreakTheScrollLightColors,
+        colorScheme = BreakTheScrollCalmColors,
         typography = BreakTheScrollTypography,
         content = content,
     )

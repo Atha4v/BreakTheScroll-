@@ -8,9 +8,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.breakthescroll.app.ui.screens.ActivitiesScreen
+import com.breakthescroll.app.ui.navigation.BreakTheScrollApp
 import com.breakthescroll.app.ui.theme.BreakTheScrollTheme
-import com.breakthescroll.app.ui.theme.SurfaceNeutral
+import com.breakthescroll.app.ui.theme.DeepSlate
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,26 +20,14 @@ class MainActivity : ComponentActivity() {
             BreakTheScrollTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = SurfaceNeutral,
+                    color = DeepSlate,
                 ) {
-                    ActivitiesScreen(
-                        onAccepted = { challenge ->
-                            Toast
-                                .makeText(
-                                    this,
-                                    "Accepted: ${challenge.title}",
-                                    Toast.LENGTH_SHORT,
-                                )
-                                .show()
+                    BreakTheScrollApp(
+                        onAcceptedToast = { title ->
+                            Toast.makeText(this, "Accepted: $title", Toast.LENGTH_SHORT).show()
                         },
-                        onPassed = { challenge ->
-                            Toast
-                                .makeText(
-                                    this,
-                                    "Passed: ${challenge.title}",
-                                    Toast.LENGTH_SHORT,
-                                )
-                                .show()
+                        onPassedToast = { title ->
+                            Toast.makeText(this, "Passed: $title", Toast.LENGTH_SHORT).show()
                         },
                     )
                 }

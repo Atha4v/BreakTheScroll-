@@ -15,11 +15,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.breakthescroll.app.R
 import com.breakthescroll.app.ui.model.FeedMode
-import com.breakthescroll.app.ui.theme.BorderSubtle
+import com.breakthescroll.app.ui.theme.BorderObsidian
 import com.breakthescroll.app.ui.theme.BreakTheScrollTheme
-import com.breakthescroll.app.ui.theme.ContainerWhite
-import com.breakthescroll.app.ui.theme.PrimaryEmerald
-import com.breakthescroll.app.ui.theme.PrimaryEmeraldContainer
+import com.breakthescroll.app.ui.theme.Obsidian
+import com.breakthescroll.app.ui.theme.SereneMint
+import com.breakthescroll.app.ui.theme.SereneMintContainer
+import com.breakthescroll.app.ui.theme.SoftFrostMuted
 
 @Composable
 fun FeedModeToggle(
@@ -35,12 +36,12 @@ fun FeedModeToggle(
                 selected = selected == mode,
                 onClick = { onSelected(mode) },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = modes.size),
-                border = BorderStroke(1.dp, BorderSubtle),
+                border = BorderStroke(1.dp, BorderObsidian),
                 colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = PrimaryEmeraldContainer,
-                    activeContentColor = PrimaryEmerald,
-                    inactiveContainerColor = ContainerWhite,
-                    inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    activeContainerColor = SereneMintContainer,
+                    activeContentColor = SereneMint,
+                    inactiveContainerColor = Obsidian,
+                    inactiveContentColor = SoftFrostMuted,
                 ),
                 label = {
                     Text(
@@ -56,7 +57,7 @@ fun FeedModeToggle(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun FeedModeTogglePreview() {
     BreakTheScrollTheme {

@@ -52,11 +52,12 @@ import com.breakthescroll.app.ui.model.ActivityChallenge
 import com.breakthescroll.app.ui.model.FeedMode
 import com.breakthescroll.app.ui.model.SampleActivityCatalog
 import com.breakthescroll.app.ui.theme.BreakTheScrollTheme
-import com.breakthescroll.app.ui.theme.ContainerWhite
+import com.breakthescroll.app.ui.theme.DeepSlate
 import com.breakthescroll.app.ui.theme.OnSurfaceSecondary
 import com.breakthescroll.app.ui.theme.PassCoral
 import com.breakthescroll.app.ui.theme.PrimaryEmerald
 import com.breakthescroll.app.ui.theme.PrimaryEmeraldContainer
+import com.breakthescroll.app.ui.theme.SoftFrost
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -338,7 +339,7 @@ private fun DeckActionRow(
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = PrimaryEmerald,
-                    contentColor = ContainerWhite,
+                    contentColor = DeepSlate,
                     disabledContainerColor = PrimaryEmeraldContainer,
                     disabledContentColor = PrimaryEmerald.copy(alpha = 0.45f),
                 ),
