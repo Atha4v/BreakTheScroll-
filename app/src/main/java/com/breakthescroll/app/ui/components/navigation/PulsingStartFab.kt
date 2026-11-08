@@ -20,14 +20,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.breakthescroll.app.ui.theme.DeepSlate
-import com.breakthescroll.app.ui.theme.SereneMint
+import com.breakthescroll.app.ui.theme.LocalBtsPalette
 
 @Composable
 fun PulsingStartFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val palette = LocalBtsPalette.current
     val pulse = rememberInfiniteTransition(label = "startPulse")
     val scale by pulse.animateFloat(
         initialValue = 1f,
@@ -61,13 +61,13 @@ fun PulsingStartFab(
                     this.alpha = alpha
                 },
         ) {
-            drawCircle(color = SereneMint)
+            drawCircle(color = palette.primary)
         }
         FloatingActionButton(
             onClick = onClick,
             shape = CircleShape,
-            containerColor = SereneMint,
-            contentColor = DeepSlate,
+            containerColor = palette.primary,
+            contentColor = palette.onPrimary,
             modifier = Modifier.size(58.dp),
         ) {
             Icon(

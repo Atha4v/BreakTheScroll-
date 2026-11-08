@@ -24,39 +24,40 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.breakthescroll.app.R
-import com.breakthescroll.app.ui.model.SampleProgress
-import com.breakthescroll.app.ui.theme.BorderObsidian
-import com.breakthescroll.app.ui.theme.BreakTheScrollTheme
-import com.breakthescroll.app.ui.theme.DeepSlate
-import com.breakthescroll.app.ui.theme.Obsidian
-import com.breakthescroll.app.ui.theme.SereneMint
-import com.breakthescroll.app.ui.theme.SoftFrost
-import com.breakthescroll.app.ui.theme.SoftFrostMuted
-import com.breakthescroll.app.ui.theme.WarmAmber
+import com.breakthescroll.app.ui.theme.LocalBtsPalette
+import com.breakthescroll.app.ui.viewmodel.ProgressUiState
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProgressScreen(modifier: Modifier = Modifier) {
+fun ProgressScreen(
+    state: ProgressUiState,
+    modifier: Modifier = Modifier,
+) {
+    val palette = LocalBtsPalette.current
+    val hours = state.stats.screenTimeSavedMinutes / 60f
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(DeepSlate)
+            .background(palette.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
         Text(
             text = stringResource(R.string.progress_title),
             style = MaterialTheme.typography.displaySmall,
-            color = SoftFrost,
+            color = palette.onBackground,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Hours reclaimed, streaks kept, and calm momentum.",
+            text = "Live Room analytics — no dummy progress.",
             style = MaterialTheme.typography.bodyMedium,
-            color = SoftFrostMuted,
+            color = palette.onSurfaceMuted,
         )
         Spacer(modifier = Modifier.height(18.dp))
 
@@ -64,29 +65,14 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            MetricTile(
-                label = "Hours saved",
-                value = "${SampleProgress.hoursSavedThisWeek}",
-                accent = SereneMint,
-                modifier = Modifier.weight(1f),
-            )
-            MetricTile(
-                label = "Tasks done",
-                value = "${SampleProgress.tasksCompleted}",
-                accent = WarmAmber,
-                modifier = Modifier.weight(1f),
-            )
-            MetricTile(
-                label = "Streak",
-                value = "${SampleProgress.currentStreak}d",
-                accent = SoftFrost,
-                modifier = Modifier.weight(1f),
-            )
+            MetricTile("Hours saved", String.format("%.1f", hours), palette.primary, Modifier.weight(1f))
+            MetricTile("Tasks done", "${state.stats.tasksCompleted}", palette.highlight, Modifier.weight(1f))
+            MetricTile("Streak", "${state.stats.currentStreak}d", palette.onBackground, Modifier.weight(1f))
         }
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        PanelCard(title = "This week") {
+        PanelCard("This week") {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -95,21 +81,20 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.Bottom,
             ) {
                 val days = listOf("M", "T", "W", "T", "F", "S", "S")
-                SampleProgress.weeklyBars.forEachIndexed { index, value ->
+                state.weeklyBars.forEachIndexed { index, value ->
                     Column(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Bottom,
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height((110 * value).dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(SereneMint.copy(alpha = 0.35f + value * 0.55f)),
+                                .background(palette.primary.copy(alpha = 0.25f + value * 0.65f)),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(days[index], style = MaterialTheme.typography.labelMedium, color = SoftFrostMuted)
+                        Text(days[index], style = MaterialTheme.typography.labelMedium, color = palette.onSurfaceMuted)
                     }
                 }
             }
@@ -117,45 +102,41 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        PanelCard(title = "Streak heatmap") {
+        PanelCard("Streak heatmap") {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                SampleProgress.heatmap.forEach { intensity ->
+                state.heatmap.forEach { intensity ->
                     Box(
                         modifier = Modifier
                             .size(18.dp)
                             .clip(RoundedCornerShape(5.dp))
-                            .background(SereneMint.copy(alpha = 0.15f + intensity * 0.75f)),
+                            .background(palette.primary.copy(alpha = intensity)),
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Darker cells = deeper offline wins.",
-                style = MaterialTheme.typography.labelMedium,
-                color = SoftFrostMuted,
-            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        PanelCard(title = "Recent completions") {
-            listOf(
-                "Desk yoga stretch · 6 min",
-                "Hydration pause · 2 min",
-                "Box breathing reset · 2 min",
-                "Five-minute walk · 5 min",
-            ).forEachIndexed { index, item ->
+        PanelCard("Completion log") {
+            if (state.recent.isEmpty()) {
                 Text(
-                    text = "• $item",
+                    "Accept activities or finish START resets to build history.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = SoftFrost,
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    color = palette.onSurfaceMuted,
                 )
-                if (index < 3) {
-                    Spacer(modifier = Modifier.height(2.dp))
+            } else {
+                val formatter = DateTimeFormatter.ofPattern("MMM d · HH:mm")
+                    .withZone(ZoneId.systemDefault())
+                state.recent.forEach { item ->
+                    Text(
+                        text = "• ${item.title} · ${item.durationMinutes} min · ${formatter.format(Instant.ofEpochMilli(item.completedAt))}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.onBackground,
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    )
                 }
             }
         }
@@ -171,16 +152,17 @@ private fun MetricTile(
     accent: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier,
 ) {
+    val palette = LocalBtsPalette.current
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(18.dp))
-            .background(Obsidian)
-            .border(1.dp, BorderObsidian, RoundedCornerShape(18.dp))
+            .background(palette.surface)
+            .border(1.dp, palette.border, RoundedCornerShape(18.dp))
             .padding(14.dp),
     ) {
         Text(value, style = MaterialTheme.typography.titleLarge, color = accent)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = SoftFrostMuted)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = palette.onSurfaceMuted)
     }
 }
 
@@ -189,22 +171,17 @@ private fun PanelCard(
     title: String,
     content: @Composable () -> Unit,
 ) {
+    val palette = LocalBtsPalette.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(22.dp))
-            .background(Obsidian)
-            .border(1.dp, BorderObsidian, RoundedCornerShape(22.dp))
+            .background(palette.surface)
+            .border(1.dp, palette.border, RoundedCornerShape(22.dp))
             .padding(16.dp),
     ) {
-        Text(title, style = MaterialTheme.typography.titleMedium, color = SoftFrost)
+        Text(title, style = MaterialTheme.typography.titleMedium, color = palette.onBackground)
         Spacer(modifier = Modifier.height(14.dp))
         content()
     }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF0F172A)
-@Composable
-private fun ProgressScreenPreview() {
-    BreakTheScrollTheme { ProgressScreen() }
 }

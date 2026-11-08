@@ -32,23 +32,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.breakthescroll.app.ui.model.BuddyMood
-import com.breakthescroll.app.ui.theme.BuddyCream
-import com.breakthescroll.app.ui.theme.BuddyFox
-import com.breakthescroll.app.ui.theme.DeepSlate
-import com.breakthescroll.app.ui.theme.ObsidianElevated
-import com.breakthescroll.app.ui.theme.SereneMint
-import com.breakthescroll.app.ui.theme.SoftFrost
-import com.breakthescroll.app.ui.theme.WarmAmber
+import com.breakthescroll.app.ui.theme.BuddyBadgerCream
+import com.breakthescroll.app.ui.theme.BuddyBadgerFur
+import com.breakthescroll.app.ui.theme.BuddyBadgerStripe
+import com.breakthescroll.app.ui.theme.LocalBtsPalette
 
 fun buddyPromptFor(mood: BuddyMood): String = when (mood) {
-    BuddyMood.Idle -> "Chalo, ek chhoti si win pakadte hain ✨"
-    BuddyMood.Cheer -> "Yesss! Mast kiya — scroll thoda wait karega 🦊"
-    BuddyMood.Rest -> "Main yahin hoon. Shaant raho, phone baad mein."
-    BuddyMood.Nudge -> "Arre, feed chhod ke real world try karo na?"
+    BuddyMood.Idle -> "Honey badger mode on. Chalo, ek chhoti win pakadte hain."
+    BuddyMood.Working -> "Main saath hoon — focus tight, scroll weak."
+    BuddyMood.Cheer -> "That's persistence! Never give up — mast kiya 🦡"
+    BuddyMood.Rest -> "Rest bhi strength hai. Phone baad mein."
+    BuddyMood.Nudge -> "Feed chor, real world try kar. Badger doesn't quit."
 }
 
 @Composable
@@ -57,69 +55,62 @@ fun ScrollBuddyBanner(
     modifier: Modifier = Modifier,
     customMessage: String? = null,
 ) {
+    val palette = LocalBtsPalette.current
     val message = customMessage ?: buddyPromptFor(mood)
-    val bounce = rememberInfiniteTransition(label = "buddyBounce")
+    val bounce = rememberInfiniteTransition(label = "badgerBounce")
     val floatY by bounce.animateFloat(
         initialValue = 0f,
-        targetValue = if (mood == BuddyMood.Cheer) -10f else -4f,
+        targetValue = when (mood) {
+            BuddyMood.Cheer -> -10f
+            BuddyMood.Working -> -3f
+            else -> -5f
+        },
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
+            animation = tween(1100, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
         ),
-        label = "buddyY",
-    )
-    val earWiggle by bounce.animateFloat(
-        initialValue = -4f,
-        targetValue = 4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(900, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "ear",
+        label = "badgerY",
     )
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(ObsidianElevated, RoundedCornerShape(20.dp))
+            .background(palette.surfaceElevated, RoundedCornerShape(20.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
             modifier = Modifier
-                .size(64.dp)
-                .graphicsLayer {
-                    translationY = floatY
-                    rotationZ = if (mood == BuddyMood.Cheer) earWiggle * 0.4f else 0f
-                },
+                .size(68.dp)
+                .graphicsLayer { translationY = floatY },
             contentAlignment = Alignment.Center,
         ) {
-            FoxBuddyFace(mood = mood, earTilt = earWiggle)
+            HoneyBadgerFace(mood = mood)
         }
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Buddy",
+                text = "ScrollBuddy · Honey Badger",
                 style = MaterialTheme.typography.labelLarge,
-                color = WarmAmber,
+                color = palette.highlight,
             )
             Spacer(modifier = Modifier.height(4.dp))
             AnimatedContent(
                 targetState = message,
                 transitionSpec = { fadeIn(tween(220)) togetherWith fadeOut(tween(160)) },
-                label = "buddySpeech",
+                label = "badgerSpeech",
             ) { text ->
                 Box(
                     modifier = Modifier
-                        .widthIn(max = 260.dp)
-                        .background(DeepSlate, RoundedCornerShape(14.dp))
+                        .widthIn(max = 280.dp)
+                        .background(palette.background, RoundedCornerShape(14.dp))
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                 ) {
                     Text(
                         text = text,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = SoftFrost,
+                        color = palette.onBackground,
                     )
                 }
             }
@@ -128,79 +119,66 @@ fun ScrollBuddyBanner(
 }
 
 @Composable
-private fun FoxBuddyFace(
-    mood: BuddyMood,
-    earTilt: Float,
-) {
-    Canvas(modifier = Modifier.size(64.dp)) {
+private fun HoneyBadgerFace(mood: BuddyMood) {
+    Canvas(modifier = Modifier.size(68.dp)) {
         val w = size.width
         val h = size.height
 
         // Ears
-        val leftEar = androidx.compose.ui.graphics.Path().apply {
-            moveTo(w * 0.22f, h * 0.42f)
-            lineTo(w * 0.18f, h * 0.08f)
-            lineTo(w * 0.4f, h * 0.28f)
-            close()
-        }
-        val rightEar = androidx.compose.ui.graphics.Path().apply {
-            moveTo(w * 0.78f, h * 0.42f)
-            lineTo(w * 0.82f, h * 0.08f)
-            lineTo(w * 0.6f, h * 0.28f)
-            close()
-        }
-        drawPath(leftEar, BuddyFox)
-        drawPath(rightEar, BuddyFox)
+        drawCircle(BuddyBadgerFur, w * 0.1f, Offset(w * 0.22f, h * 0.28f))
+        drawCircle(BuddyBadgerFur, w * 0.1f, Offset(w * 0.78f, h * 0.28f))
+        drawCircle(BuddyBadgerCream, w * 0.045f, Offset(w * 0.22f, h * 0.28f))
+        drawCircle(BuddyBadgerCream, w * 0.045f, Offset(w * 0.78f, h * 0.28f))
 
-        // Head
+        // Head / body blob
         drawRoundRect(
-            color = BuddyFox,
-            topLeft = Offset(w * 0.16f, h * 0.22f),
-            size = Size(w * 0.68f, h * 0.62f),
+            color = BuddyBadgerFur,
+            topLeft = Offset(w * 0.12f, h * 0.22f),
+            size = Size(w * 0.76f, h * 0.62f),
             cornerRadius = CornerRadius(28f, 28f),
         )
+
+        // Signature white dorsal stripe
+        val stripe = Path().apply {
+            moveTo(w * 0.28f, h * 0.26f)
+            quadraticTo(w * 0.5f, h * 0.18f, w * 0.72f, h * 0.26f)
+            lineTo(w * 0.68f, h * 0.42f)
+            quadraticTo(w * 0.5f, h * 0.34f, w * 0.32f, h * 0.42f)
+            close()
+        }
+        drawPath(stripe, BuddyBadgerStripe)
+
         // Snout
         drawRoundRect(
-            color = BuddyCream,
-            topLeft = Offset(w * 0.32f, h * 0.52f),
-            size = Size(w * 0.36f, h * 0.24f),
-            cornerRadius = CornerRadius(18f, 18f),
+            color = BuddyBadgerCream,
+            topLeft = Offset(w * 0.34f, h * 0.52f),
+            size = Size(w * 0.32f, h * 0.24f),
+            cornerRadius = CornerRadius(16f, 16f),
         )
-        drawCircle(DeepSlate, w * 0.035f, Offset(w * 0.5f, h * 0.62f))
+        drawCircle(BuddyBadgerFur, w * 0.03f, Offset(w * 0.5f, h * 0.64f))
 
-        // Eyes
+        // Eyes / expression
         when (mood) {
             BuddyMood.Cheer -> {
-                drawLine(DeepSlate, Offset(w * 0.34f, h * 0.42f), Offset(w * 0.42f, h * 0.46f), 4f)
-                drawLine(DeepSlate, Offset(w * 0.42f, h * 0.46f), Offset(w * 0.34f, h * 0.5f), 4f)
-                drawLine(DeepSlate, Offset(w * 0.58f, h * 0.46f), Offset(w * 0.66f, h * 0.42f), 4f)
-                drawLine(DeepSlate, Offset(w * 0.58f, h * 0.46f), Offset(w * 0.66f, h * 0.5f), 4f)
+                drawLine(BuddyBadgerFur, Offset(w * 0.34f, h * 0.44f), Offset(w * 0.42f, h * 0.48f), 4f)
+                drawLine(BuddyBadgerFur, Offset(w * 0.42f, h * 0.48f), Offset(w * 0.34f, h * 0.52f), 4f)
+                drawLine(BuddyBadgerFur, Offset(w * 0.58f, h * 0.48f), Offset(w * 0.66f, h * 0.44f), 4f)
+                drawLine(BuddyBadgerFur, Offset(w * 0.58f, h * 0.48f), Offset(w * 0.66f, h * 0.52f), 4f)
             }
             BuddyMood.Rest -> {
-                drawLine(DeepSlate, Offset(w * 0.32f, h * 0.46f), Offset(w * 0.42f, h * 0.46f), 4f)
-                drawLine(DeepSlate, Offset(w * 0.58f, h * 0.46f), Offset(w * 0.68f, h * 0.46f), 4f)
+                drawLine(BuddyBadgerFur, Offset(w * 0.32f, h * 0.48f), Offset(w * 0.42f, h * 0.48f), 4f)
+                drawLine(BuddyBadgerFur, Offset(w * 0.58f, h * 0.48f), Offset(w * 0.68f, h * 0.48f), 4f)
+            }
+            BuddyMood.Working -> {
+                drawCircle(BuddyBadgerFur, w * 0.035f, Offset(w * 0.37f, h * 0.47f))
+                drawCircle(BuddyBadgerFur, w * 0.035f, Offset(w * 0.63f, h * 0.47f))
+                drawLine(BuddyBadgerFur, Offset(w * 0.3f, h * 0.4f), Offset(w * 0.42f, h * 0.42f), 3.5f)
+                drawLine(BuddyBadgerFur, Offset(w * 0.58f, h * 0.42f), Offset(w * 0.7f, h * 0.4f), 3.5f)
             }
             else -> {
-                drawCircle(DeepSlate, w * 0.035f, Offset(w * 0.37f, h * 0.45f))
-                drawCircle(DeepSlate, w * 0.035f, Offset(w * 0.63f, h * 0.45f))
-                if (mood == BuddyMood.Nudge) {
-                    drawCircle(SereneMint, w * 0.012f, Offset(w * 0.38f, h * 0.44f))
-                    drawCircle(SereneMint, w * 0.012f, Offset(w * 0.64f, h * 0.44f))
-                }
+                drawCircle(BuddyBadgerFur, w * 0.035f, Offset(w * 0.37f, h * 0.47f))
+                drawCircle(BuddyBadgerFur, w * 0.035f, Offset(w * 0.63f, h * 0.47f))
             }
         }
-
-        // Cheek blush
-        drawCircle(ColorBlush, w * 0.04f, Offset(w * 0.26f, h * 0.55f))
-        drawCircle(ColorBlush, w * 0.04f, Offset(w * 0.74f, h * 0.55f))
-
-        // Subtle ear tilt cue via tiny highlight
-        drawCircle(
-            BuddyCream.copy(alpha = 0.35f),
-            w * 0.03f,
-            Offset(w * (0.28f + earTilt * 0.002f), h * 0.2f),
-        )
     }
 }
-
-private val ColorBlush = Color(0x55FF8A65)

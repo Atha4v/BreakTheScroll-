@@ -45,19 +45,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.breakthescroll.app.R
 import com.breakthescroll.app.ui.model.ActivityChallenge
-import com.breakthescroll.app.ui.model.FeedMode
-import com.breakthescroll.app.ui.model.SampleActivityCatalog
-import com.breakthescroll.app.ui.theme.BreakTheScrollTheme
-import com.breakthescroll.app.ui.theme.DeepSlate
+import com.breakthescroll.app.ui.theme.LocalBtsPalette
 import com.breakthescroll.app.ui.theme.OnSurfaceSecondary
-import com.breakthescroll.app.ui.theme.PassCoral
-import com.breakthescroll.app.ui.theme.PrimaryEmerald
-import com.breakthescroll.app.ui.theme.PrimaryEmeraldContainer
-import com.breakthescroll.app.ui.theme.SoftFrost
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -171,6 +163,7 @@ fun ActivityFlashCardDeck(
         }
     }
 
+    val palette = LocalBtsPalette.current
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -199,7 +192,7 @@ fun ActivityFlashCardDeck(
                     Icon(
                         imageVector = Icons.Outlined.Refresh,
                         contentDescription = "Reset deck",
-                        tint = PrimaryEmerald,
+                        tint = palette.primary,
                     )
                 }
             }
@@ -301,6 +294,7 @@ private fun DeckActionRow(
     onPass: () -> Unit,
     onAccept: () -> Unit,
 ) {
+    val palette = LocalBtsPalette.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -313,8 +307,8 @@ private fun DeckActionRow(
                 modifier = Modifier.size(64.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.outlinedIconButtonColors(
-                    contentColor = PassCoral,
-                    disabledContentColor = PassCoral.copy(alpha = 0.35f),
+                    contentColor = palette.error,
+                    disabledContentColor = palette.error.copy(alpha = 0.35f),
                 ),
             ) {
                 Icon(
@@ -327,7 +321,7 @@ private fun DeckActionRow(
             Text(
                 text = stringResource(R.string.action_pass),
                 style = MaterialTheme.typography.labelMedium,
-                color = if (enabled) PassCoral else PassCoral.copy(alpha = 0.35f),
+                color = if (enabled) palette.error else palette.error.copy(alpha = 0.35f),
             )
         }
 
@@ -338,10 +332,10 @@ private fun DeckActionRow(
                 modifier = Modifier.size(72.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = PrimaryEmerald,
-                    contentColor = DeepSlate,
-                    disabledContainerColor = PrimaryEmeraldContainer,
-                    disabledContentColor = PrimaryEmerald.copy(alpha = 0.45f),
+                    containerColor = palette.primary,
+                    contentColor = palette.onPrimary,
+                    disabledContainerColor = palette.primaryContainer,
+                    disabledContentColor = palette.primary.copy(alpha = 0.45f),
                 ),
             ) {
                 Icon(
@@ -354,7 +348,7 @@ private fun DeckActionRow(
             Text(
                 text = stringResource(R.string.action_accept),
                 style = MaterialTheme.typography.labelMedium,
-                color = if (enabled) PrimaryEmerald else PrimaryEmerald.copy(alpha = 0.35f),
+                color = if (enabled) palette.primary else palette.primary.copy(alpha = 0.35f),
             )
         }
     }
@@ -385,13 +379,3 @@ private fun EmptyDeckState() {
     }
 }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 720)
-@Composable
-private fun ActivityFlashCardDeckPreview() {
-    BreakTheScrollTheme {
-        ActivityFlashCardDeck(
-            challenges = SampleActivityCatalog.forMode(FeedMode.ForYou),
-            modifier = Modifier.padding(20.dp),
-        )
-    }
-}

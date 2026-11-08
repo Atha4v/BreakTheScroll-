@@ -3,7 +3,6 @@ package com.breakthescroll.app.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,14 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,54 +28,46 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.breakthescroll.app.R
+import com.breakthescroll.app.data.local.entity.UserStatsEntity
 import com.breakthescroll.app.ui.components.buddy.ScrollBuddyBanner
 import com.breakthescroll.app.ui.model.BuddyMood
-import com.breakthescroll.app.ui.model.SampleProfile
-import com.breakthescroll.app.ui.theme.BorderObsidian
-import com.breakthescroll.app.ui.theme.BreakTheScrollTheme
-import com.breakthescroll.app.ui.theme.DeepSlate
-import com.breakthescroll.app.ui.theme.Obsidian
-import com.breakthescroll.app.ui.theme.SereneMint
-import com.breakthescroll.app.ui.theme.SoftFrost
-import com.breakthescroll.app.ui.theme.SoftFrostMuted
-import com.breakthescroll.app.ui.theme.WarmAmber
+import com.breakthescroll.app.ui.theme.LocalBtsPalette
 
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(
+    displayName: String,
+    stats: UserStatsEntity,
+    darkTheme: Boolean,
+    onDarkThemeChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val palette = LocalBtsPalette.current
     var tabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf(
-        stringResource(R.string.profile_title),
-        stringResource(R.string.groups_title),
-    )
+    val tabs = listOf(stringResource(R.string.profile_title), stringResource(R.string.groups_title))
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(DeepSlate)
+            .background(palette.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
-        Text(
-            text = SampleProfile.displayName,
-            style = MaterialTheme.typography.displaySmall,
-            color = SoftFrost,
-        )
+        Text(displayName, style = MaterialTheme.typography.displaySmall, color = palette.onBackground)
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Companion Lv.${SampleProfile.companionLevel} · Calm streak keeper",
+            text = "Streak ${stats.currentStreak} · ${stats.tasksCompleted} tasks · Honey Badger ready",
             style = MaterialTheme.typography.bodyMedium,
-            color = SoftFrostMuted,
+            color = palette.onSurfaceMuted,
         )
 
         Spacer(modifier = Modifier.height(14.dp))
 
         SecondaryTabRow(
             selectedTabIndex = tabIndex,
-            containerColor = Obsidian,
-            contentColor = SoftFrost,
+            containerColor = palette.surface,
+            contentColor = palette.onBackground,
             modifier = Modifier.clip(RoundedCornerShape(14.dp)),
         ) {
             tabs.forEachIndexed { index, title ->
@@ -87,7 +77,7 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
                     text = {
                         Text(
                             title,
-                            color = if (tabIndex == index) SereneMint else SoftFrostMuted,
+                            color = if (tabIndex == index) palette.primary else palette.onSurfaceMuted,
                         )
                     },
                 )
@@ -96,133 +86,104 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        when (tabIndex) {
-            0 -> ProfileTabContent()
-            else -> SquadsTabContent()
+        if (tabIndex == 0) {
+            ScrollBuddyBanner(
+                mood = BuddyMood.Rest,
+                customMessage = "Dark/Light jo bhi — persistence same. Never give up.",
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(palette.surface)
+                    .border(1.dp, palette.border, RoundedCornerShape(20.dp))
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Text("Appearance", style = MaterialTheme.typography.titleMedium, color = palette.onBackground)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column {
+                        Text(
+                            if (darkTheme) "Dark mode" else "Light mode",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = palette.onBackground,
+                        )
+                        Text(
+                            if (darkTheme) {
+                                "Deep Slate · Serene Mint · Warm Amber"
+                            } else {
+                                "Pristine White · Resilient Copper · Badger Gold"
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = palette.onSurfaceMuted,
+                        )
+                    }
+                    Switch(
+                        checked = darkTheme,
+                        onCheckedChange = onDarkThemeChange,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = palette.onPrimary,
+                            checkedTrackColor = palette.primary,
+                            uncheckedThumbColor = palette.primary,
+                            uncheckedTrackColor = palette.primaryContainer,
+                        ),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(palette.surface)
+                    .border(1.dp, palette.border, RoundedCornerShape(20.dp))
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text("Stats snapshot", style = MaterialTheme.typography.titleMedium, color = palette.onBackground)
+                Text("Longest streak: ${stats.longestStreak} days", color = palette.onSurfaceMuted)
+                Text("Screen time saved: ${stats.screenTimeSavedMinutes} min", color = palette.onSurfaceMuted)
+                Text("Theme preference saved in Room", color = palette.onSurfaceMuted)
+            }
+        } else {
+            Text(
+                "Squad challenges sync later — local Room logs power your personal streak today.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.onSurfaceMuted,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            listOf(
+                "Dawn Movers · join shared morning walks",
+                "Focus Pod · no-doomscroll evenings",
+                "Hydration Crew · glass-for-glass accountability",
+            ).forEach { line ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(palette.surface)
+                        .border(1.dp, palette.border, RoundedCornerShape(18.dp))
+                        .padding(16.dp),
+                ) {
+                    Text(line, style = MaterialTheme.typography.titleMedium, color = palette.onBackground)
+                    Text(
+                        "Community stream coming next — your completions already persist locally.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.onSurfaceMuted,
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(96.dp))
     }
-}
-
-@Composable
-private fun ProfileTabContent() {
-    ScrollBuddyBanner(mood = BuddyMood.Rest, customMessage = "Main ready hoon jab tum offline jao 🦊")
-    Spacer(modifier = Modifier.height(14.dp))
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Obsidian)
-            .border(1.dp, BorderObsidian, RoundedCornerShape(20.dp))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text("Achievements", style = MaterialTheme.typography.titleMedium, color = SoftFrost)
-        SampleProfile.achievements.forEach { achievement ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(if (achievement.unlocked) WarmAmber.copy(alpha = 0.25f) else BorderObsidian),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = if (achievement.unlocked) "★" else "·",
-                        color = if (achievement.unlocked) WarmAmber else SoftFrostMuted,
-                    )
-                }
-                Column {
-                    Text(achievement.title, style = MaterialTheme.typography.titleMedium, color = SoftFrost)
-                    Text(achievement.subtitle, style = MaterialTheme.typography.bodyMedium, color = SoftFrostMuted)
-                }
-            }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(14.dp))
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Obsidian)
-            .border(1.dp, BorderObsidian, RoundedCornerShape(20.dp))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Text("Settings", style = MaterialTheme.typography.titleMedium, color = SoftFrost)
-        SettingRow("Monitored apps", "Instagram, YouTube, Reddit")
-        SettingRow("Sensitivity", "Medium · 8 min dwell")
-        SettingRow("Quiet hours", "11:00 PM – 7:00 AM")
-        SettingRow("Preferred categories", "Movement, Mindfulness")
-    }
-}
-
-@Composable
-private fun SquadsTabContent() {
-    Text(
-        text = "Join squads for shared accountability and joint challenges.",
-        style = MaterialTheme.typography.bodyMedium,
-        color = SoftFrostMuted,
-    )
-    Spacer(modifier = Modifier.height(12.dp))
-
-    SampleProfile.squads.forEach { squad ->
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(Obsidian)
-                .border(1.dp, BorderObsidian, RoundedCornerShape(20.dp))
-                .padding(16.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(squad.name, style = MaterialTheme.typography.titleMedium, color = SoftFrost)
-                Text("${squad.members} members", style = MaterialTheme.typography.labelMedium, color = SoftFrostMuted)
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(squad.challenge, style = MaterialTheme.typography.bodyMedium, color = SoftFrostMuted)
-            Spacer(modifier = Modifier.height(10.dp))
-            LinearProgressIndicator(
-                progress = { squad.progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                color = SereneMint,
-                trackColor = BorderObsidian,
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "${(squad.progress * 100).toInt()}% squad progress",
-                style = MaterialTheme.typography.labelMedium,
-                color = SereneMint,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SettingRow(label: String, value: String) {
-    Column {
-        Text(label, style = MaterialTheme.typography.labelLarge, color = SoftFrost)
-        Text(value, style = MaterialTheme.typography.bodyMedium, color = SoftFrostMuted)
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF0F172A)
-@Composable
-private fun ProfileScreenPreview() {
-    BreakTheScrollTheme { ProfileScreen() }
 }

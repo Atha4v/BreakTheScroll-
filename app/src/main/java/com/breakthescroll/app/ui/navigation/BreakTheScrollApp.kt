@@ -25,19 +25,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.breakthescroll.app.R
 import com.breakthescroll.app.ui.components.navigation.PulsingStartFab
 import com.breakthescroll.app.ui.components.navigation.StartResetSheet
-import com.breakthescroll.app.ui.model.BuddyMood
+import com.breakthescroll.app.ui.model.FeedMode
 import com.breakthescroll.app.ui.screens.ActivitiesScreen
 import com.breakthescroll.app.ui.screens.HabitsScreen
 import com.breakthescroll.app.ui.screens.ProfileScreen
 import com.breakthescroll.app.ui.screens.ProgressScreen
-import com.breakthescroll.app.ui.theme.DeepSlate
-import com.breakthescroll.app.ui.theme.Obsidian
-import com.breakthescroll.app.ui.theme.SereneMint
-import com.breakthescroll.app.ui.theme.SoftFrost
-import com.breakthescroll.app.ui.theme.SoftFrostMuted
+import com.breakthescroll.app.ui.theme.LocalBtsPalette
+import com.breakthescroll.app.ui.viewmodel.AppViewModel
 
 private enum class AppDestination(
     val labelRes: Int,
@@ -52,20 +50,33 @@ private enum class AppDestination(
 
 @Composable
 fun BreakTheScrollApp(
+    viewModel: AppViewModel,
     onAcceptedToast: (String) -> Unit = {},
     onPassedToast: (String) -> Unit = {},
 ) {
+    val palette = LocalBtsPalette.current
     var destination by remember { mutableStateOf(AppDestination.Activities) }
-    var buddyMood by remember { mutableStateOf(BuddyMood.Idle) }
     var showStartSheet by remember { mutableStateOf(false) }
 
+    val darkTheme by viewModel.darkTheme.collectAsStateWithLifecycle()
+    val buddyMood by viewModel.buddyMood.collectAsStateWithLifecycle()
+    val feedMode by viewModel.feedMode.collectAsStateWithLifecycle()
+    val forYou by viewModel.forYou.collectAsStateWithLifecycle()
+    val serendipity by viewModel.serendipity.collectAsStateWithLifecycle()
+    val habits by viewModel.habits.collectAsStateWithLifecycle()
+    val progress by viewModel.progress.collectAsStateWithLifecycle()
+    val stats by viewModel.stats.collectAsStateWithLifecycle()
+    val displayName by viewModel.displayName.collectAsStateWithLifecycle()
+
+    val catalog = if (feedMode == FeedMode.ForYou) forYou else serendipity
+
     Scaffold(
-        containerColor = DeepSlate,
+        containerColor = palette.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             NavigationBar(
-                containerColor = Obsidian,
-                contentColor = SoftFrost,
+                containerColor = palette.surface,
+                contentColor = palette.onBackground,
                 tonalElevation = 0.dp,
                 modifier = Modifier.clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)),
             ) {
@@ -74,14 +85,12 @@ fun BreakTheScrollApp(
                         NavigationBarItem(
                             selected = false,
                             onClick = { showStartSheet = true },
-                            icon = {
-                                PulsingStartFab(onClick = { showStartSheet = true })
-                            },
+                            icon = { PulsingStartFab(onClick = { showStartSheet = true }) },
                             label = {
-                                Text(stringResource(item.labelRes), color = SereneMint)
+                                Text(stringResource(item.labelRes), color = palette.primary)
                             },
                             colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = DeepSlate.copy(alpha = 0f),
+                                indicatorColor = palette.background.copy(alpha = 0f),
                             ),
                         )
                     } else {
@@ -96,11 +105,11 @@ fun BreakTheScrollApp(
                             },
                             label = { Text(stringResource(item.labelRes)) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SereneMint,
-                                selectedTextColor = SereneMint,
-                                unselectedIconColor = SoftFrostMuted,
-                                unselectedTextColor = SoftFrostMuted,
-                                indicatorColor = SereneMint.copy(alpha = 0.14f),
+                                selectedIconColor = palette.primary,
+                                selectedTextColor = palette.primary,
+                                unselectedIconColor = palette.onSurfaceMuted,
+                                unselectedTextColor = palette.onSurfaceMuted,
+                                indicatorColor = palette.primary.copy(alpha = 0.14f),
                             ),
                         )
                     }
@@ -111,23 +120,40 @@ fun BreakTheScrollApp(
         val contentModifier = Modifier
             .padding(innerPadding)
             .statusBarsPadding()
+
         when (destination) {
-            AppDestination.Activities -> ActivitiesScreen(
+            AppDestination.Activities, AppDestination.Start -> ActivitiesScreen(
                 buddyMood = buddyMood,
-                modifier = contentModifier,
+                feedMode = feedMode,
+                catalog = catalog,
+                onFeedModeChange = viewModel::setFeedMode,
                 onAccepted = {
-                    buddyMood = BuddyMood.Cheer
+                    viewModel.acceptActivity(it.source)
                     onAcceptedToast(it.title)
                 },
                 onPassed = {
-                    buddyMood = BuddyMood.Nudge
+                    viewModel.passActivity()
                     onPassedToast(it.title)
                 },
+                modifier = contentModifier,
             )
-            AppDestination.Habits -> HabitsScreen(modifier = contentModifier)
-            AppDestination.Start -> ActivitiesScreen(buddyMood = buddyMood, modifier = contentModifier)
-            AppDestination.Progress -> ProgressScreen(modifier = contentModifier)
-            AppDestination.Profile -> ProfileScreen(modifier = contentModifier)
+            AppDestination.Habits -> HabitsScreen(
+                habits = habits,
+                onAddHabit = viewModel::addHabit,
+                onToggleHabit = viewModel::toggleHabit,
+                modifier = contentModifier,
+            )
+            AppDestination.Progress -> ProgressScreen(
+                state = progress,
+                modifier = contentModifier,
+            )
+            AppDestination.Profile -> ProfileScreen(
+                displayName = displayName,
+                stats = stats,
+                darkTheme = darkTheme,
+                onDarkThemeChange = viewModel::setDarkTheme,
+                modifier = contentModifier,
+            )
         }
     }
 
@@ -136,7 +162,7 @@ fun BreakTheScrollApp(
             onDismiss = { showStartSheet = false },
             onComplete = {
                 showStartSheet = false
-                buddyMood = BuddyMood.Cheer
+                viewModel.completeReset()
                 destination = AppDestination.Activities
             },
         )

@@ -35,11 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.breakthescroll.app.R
-import com.breakthescroll.app.ui.theme.DeepSlate
-import com.breakthescroll.app.ui.theme.Obsidian
-import com.breakthescroll.app.ui.theme.SereneMint
-import com.breakthescroll.app.ui.theme.SoftFrost
-import com.breakthescroll.app.ui.theme.SoftFrostMuted
+import com.breakthescroll.app.ui.theme.LocalBtsPalette
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +43,7 @@ fun StartResetSheet(
     onDismiss: () -> Unit,
     onComplete: () -> Unit,
 ) {
+    val palette = LocalBtsPalette.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val breath = rememberInfiniteTransition(label = "breath")
     val scale by breath.animateFloat(
@@ -62,8 +59,8 @@ fun StartResetSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Obsidian,
-        contentColor = SoftFrost,
+        containerColor = palette.surface,
+        contentColor = palette.onBackground,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
         Column(
@@ -76,12 +73,12 @@ fun StartResetSheet(
             Text(
                 text = stringResource(R.string.start_reset_title),
                 style = MaterialTheme.typography.headlineMedium,
-                color = SoftFrost,
+                color = palette.onBackground,
             )
             Text(
                 text = stringResource(R.string.start_reset_body),
                 style = MaterialTheme.typography.bodyMedium,
-                color = SoftFrostMuted,
+                color = palette.onSurfaceMuted,
                 textAlign = TextAlign.Center,
             )
 
@@ -95,20 +92,20 @@ fun StartResetSheet(
                         scaleY = scale
                     }
                     .clip(CircleShape)
-                    .background(SereneMint.copy(alpha = 0.2f)),
+                    .background(palette.primary.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
                     modifier = Modifier
                         .size(96.dp)
                         .clip(CircleShape)
-                        .background(SereneMint.copy(alpha = 0.45f)),
+                        .background(palette.primary.copy(alpha = 0.45f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = "Breathe",
                         style = MaterialTheme.typography.titleMedium,
-                        color = SoftFrost,
+                        color = palette.onBackground,
                     )
                 }
             }
@@ -117,7 +114,7 @@ fun StartResetSheet(
             Text(
                 text = "Inhale · Hold · Exhale · Hold",
                 style = MaterialTheme.typography.labelLarge,
-                color = SereneMint,
+                color = palette.primary,
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -125,15 +122,15 @@ fun StartResetSheet(
             Button(
                 onClick = onComplete,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = SereneMint,
-                    contentColor = DeepSlate,
+                    containerColor = palette.primary,
+                    contentColor = palette.onPrimary,
                 ),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Complete reset")
             }
             TextButton(onClick = onDismiss) {
-                Text("Not now", color = SoftFrostMuted)
+                Text("Not now", color = palette.onSurfaceMuted)
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
