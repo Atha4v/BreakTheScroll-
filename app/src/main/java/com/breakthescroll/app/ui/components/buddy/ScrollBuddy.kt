@@ -42,11 +42,11 @@ import com.breakthescroll.app.ui.theme.BuddyBadgerStripe
 import com.breakthescroll.app.ui.theme.LocalBtsPalette
 
 fun buddyPromptFor(mood: BuddyMood): String = when (mood) {
-    BuddyMood.Idle -> "Honey badger mode on. Chalo, ek chhoti win pakadte hain."
-    BuddyMood.Working -> "Main saath hoon — focus tight, scroll weak."
-    BuddyMood.Cheer -> "That's persistence! Never give up — mast kiya 🦡"
-    BuddyMood.Rest -> "Rest bhi strength hai. Phone baad mein."
-    BuddyMood.Nudge -> "Feed chor, real world try kar. Badger doesn't quit."
+    BuddyMood.Idle -> "The algorithm isn't your friend, but I am. Let's do this."
+    BuddyMood.Working -> "Eyes on the ring. Feeds can wait — badgers don't multitask nonsense."
+    BuddyMood.Cheer -> "That's persistence, chief. Scrolling couldn't have done that 🦡"
+    BuddyMood.Rest -> "Rest is a feature, not a bug. Phone face-down."
+    BuddyMood.Nudge -> "Scrolling won't fix your code. Take two minutes and actually move."
 }
 
 @Composable
@@ -119,18 +119,19 @@ fun ScrollBuddyBanner(
 }
 
 @Composable
-private fun HoneyBadgerFace(mood: BuddyMood) {
-    Canvas(modifier = Modifier.size(68.dp)) {
+fun HoneyBadgerAvatar(
+    mood: BuddyMood,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
 
-        // Ears
         drawCircle(BuddyBadgerFur, w * 0.1f, Offset(w * 0.22f, h * 0.28f))
         drawCircle(BuddyBadgerFur, w * 0.1f, Offset(w * 0.78f, h * 0.28f))
         drawCircle(BuddyBadgerCream, w * 0.045f, Offset(w * 0.22f, h * 0.28f))
         drawCircle(BuddyBadgerCream, w * 0.045f, Offset(w * 0.78f, h * 0.28f))
 
-        // Head / body blob
         drawRoundRect(
             color = BuddyBadgerFur,
             topLeft = Offset(w * 0.12f, h * 0.22f),
@@ -138,7 +139,6 @@ private fun HoneyBadgerFace(mood: BuddyMood) {
             cornerRadius = CornerRadius(28f, 28f),
         )
 
-        // Signature white dorsal stripe
         val stripe = Path().apply {
             moveTo(w * 0.28f, h * 0.26f)
             quadraticTo(w * 0.5f, h * 0.18f, w * 0.72f, h * 0.26f)
@@ -148,7 +148,6 @@ private fun HoneyBadgerFace(mood: BuddyMood) {
         }
         drawPath(stripe, BuddyBadgerStripe)
 
-        // Snout
         drawRoundRect(
             color = BuddyBadgerCream,
             topLeft = Offset(w * 0.34f, h * 0.52f),
@@ -157,7 +156,6 @@ private fun HoneyBadgerFace(mood: BuddyMood) {
         )
         drawCircle(BuddyBadgerFur, w * 0.03f, Offset(w * 0.5f, h * 0.64f))
 
-        // Eyes / expression
         when (mood) {
             BuddyMood.Cheer -> {
                 drawLine(BuddyBadgerFur, Offset(w * 0.34f, h * 0.44f), Offset(w * 0.42f, h * 0.48f), 4f)
@@ -181,4 +179,9 @@ private fun HoneyBadgerFace(mood: BuddyMood) {
             }
         }
     }
+}
+
+@Composable
+private fun HoneyBadgerFace(mood: BuddyMood) {
+    HoneyBadgerAvatar(mood = mood, modifier = Modifier.size(68.dp))
 }

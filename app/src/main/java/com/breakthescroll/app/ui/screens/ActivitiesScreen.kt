@@ -14,9 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.breakthescroll.app.R
 import com.breakthescroll.app.data.local.entity.ActivityCatalogEntity
 import com.breakthescroll.app.ui.components.activitydeck.ActivityFlashCardDeck
 import com.breakthescroll.app.ui.components.activitydeck.FeedModeToggle
@@ -29,9 +27,14 @@ import com.breakthescroll.app.ui.theme.LocalBtsPalette
 
 @Composable
 fun ActivitiesScreen(
+    displayName: String,
     buddyMood: BuddyMood,
+    buddyMessage: String,
     feedMode: FeedMode,
     catalog: List<ActivityCatalogEntity>,
+    engagementLocked: Boolean = false,
+    completedChallengeId: String? = null,
+    onCompletedConsumed: () -> Unit = {},
     onFeedModeChange: (FeedMode) -> Unit,
     onAccepted: (ActivityChallenge) -> Unit,
     onPassed: (ActivityChallenge) -> Unit,
@@ -39,6 +42,10 @@ fun ActivitiesScreen(
 ) {
     val palette = LocalBtsPalette.current
     val challenges = remember(catalog) { catalog.map { it.toChallenge() } }
+    val greeting = remember(displayName) {
+        val first = displayName.trim().ifBlank { "there" }.substringBefore(' ')
+        "Hey, $first"
+    }
 
     Column(
         modifier = modifier
@@ -48,31 +55,24 @@ fun ActivitiesScreen(
             .padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
         Text(
-            text = stringResource(R.string.activities_title),
+            text = greeting,
             style = MaterialTheme.typography.displaySmall,
             color = palette.onBackground,
         )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = when (feedMode) {
-                FeedMode.ForYou -> "Personalized micro-tasks matched to your filters."
-                FeedMode.Serendipity -> "Stochastic challenges to break autopilot scrolling."
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.onSurfaceMuted,
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-        ScrollBuddyBanner(mood = buddyMood)
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+        ScrollBuddyBanner(mood = buddyMood, customMessage = buddyMessage)
+        Spacer(modifier = Modifier.height(14.dp))
         FeedModeToggle(
             selected = feedMode,
             onSelected = onFeedModeChange,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
         ActivityFlashCardDeck(
             challenges = challenges,
+            engagementLocked = engagementLocked,
+            completedChallengeId = completedChallengeId,
+            onCompletedConsumed = onCompletedConsumed,
             onAccepted = onAccepted,
             onPassed = onPassed,
             modifier = Modifier.fillMaxWidth(),

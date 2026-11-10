@@ -40,12 +40,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.breakthescroll.app.R
 import com.breakthescroll.app.data.local.entity.HabitEntity
+import com.breakthescroll.app.ui.components.buddy.ScrollBuddyBanner
+import com.breakthescroll.app.ui.model.BuddyMood
 import com.breakthescroll.app.ui.theme.LocalBtsPalette
 import java.time.LocalDate
 
 @Composable
 fun HabitsScreen(
     habits: List<HabitEntity>,
+    buddyMood: BuddyMood,
+    buddyMessage: String,
     onAddHabit: (title: String, cadence: String) -> Unit,
     onToggleHabit: (HabitEntity) -> Unit,
     modifier: Modifier = Modifier,
@@ -73,10 +77,12 @@ fun HabitsScreen(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Custom micro-routines stored locally with Room.",
+                text = "Check off a habit — it syncs into Progress with a timestamp.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.onSurfaceMuted,
             )
+            Spacer(modifier = Modifier.height(14.dp))
+            ScrollBuddyBanner(mood = buddyMood, customMessage = buddyMessage)
             Spacer(modifier = Modifier.height(16.dp))
 
             if (habits.isEmpty()) {
@@ -186,8 +192,8 @@ private fun HabitCard(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "${habit.streakDays}",
-                style = MaterialTheme.typography.titleMedium,
+                text = if (habit.streakDays > 0) "🔥${habit.streakDays}" else "0",
+                style = MaterialTheme.typography.titleSmall,
                 color = accent,
             )
         }

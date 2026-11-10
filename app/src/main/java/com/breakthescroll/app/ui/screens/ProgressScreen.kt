@@ -15,17 +15,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Spa
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.breakthescroll.app.R
+import com.breakthescroll.app.data.local.entity.ActivityCompletionEntity
+import com.breakthescroll.app.data.local.entity.HabitCompletionEntity
+import com.breakthescroll.app.ui.components.buddy.ScrollBuddyBanner
+import com.breakthescroll.app.ui.components.streak.StreakFireBadge
+import com.breakthescroll.app.ui.model.BuddyMood
 import com.breakthescroll.app.ui.theme.LocalBtsPalette
 import com.breakthescroll.app.ui.viewmodel.ProgressUiState
 import java.time.Instant
@@ -36,10 +50,18 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ProgressScreen(
     state: ProgressUiState,
+    buddyMood: BuddyMood,
+    buddyMessage: String,
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalBtsPalette.current
     val hours = state.stats.screenTimeSavedMinutes / 60f
+    val formatter = remember {
+        DateTimeFormatter.ofPattern("EEE, MMM d · HH:mm").withZone(ZoneId.systemDefault())
+    }
+    val timeOnly = remember {
+        DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
+    }
 
     Column(
         modifier = modifier
@@ -55,11 +77,18 @@ fun ProgressScreen(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Live Room analytics — no dummy progress.",
+            text = "Activities · habits · streaks — one live receipt",
             style = MaterialTheme.typography.bodyMedium,
             color = palette.onSurfaceMuted,
         )
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(14.dp))
+
+        ScrollBuddyBanner(mood = buddyMood, customMessage = buddyMessage)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        StreakFireBadge(streak = state.stats.currentStreak, longest = state.stats.longestStreak)
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -67,10 +96,55 @@ fun ProgressScreen(
         ) {
             MetricTile("Hours saved", String.format("%.1f", hours), palette.primary, Modifier.weight(1f))
             MetricTile("Tasks done", "${state.stats.tasksCompleted}", palette.highlight, Modifier.weight(1f))
-            MetricTile("Streak", "${state.stats.currentStreak}d", palette.onBackground, Modifier.weight(1f))
         }
 
         Spacer(modifier = Modifier.height(18.dp))
+
+        PanelCard("Habits completed today") {
+            if (state.habitsToday.isEmpty()) {
+                Text(
+                    "No habits logged today — check one off in Habits.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = palette.onSurfaceMuted,
+                )
+            } else {
+                state.habitsToday.forEach { habit ->
+                    HabitHistoryRow(
+                        item = habit,
+                        timeLabel = timeOnly.format(Instant.ofEpochMilli(habit.completedAt)),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        PanelCard("Habits this week") {
+            if (state.habitsWeek.isEmpty()) {
+                Text(
+                    "Weekly habit timeline appears as you complete routines.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = palette.onSurfaceMuted,
+                )
+            } else {
+                Text(
+                    "${state.habitsWeek.size} completions · +${state.habitsWeek.size * 2} min focus",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = palette.highlight,
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                state.habitsWeek.take(12).forEach { habit ->
+                    HabitHistoryRow(
+                        item = habit,
+                        timeLabel = formatter.format(Instant.ofEpochMilli(habit.completedAt)),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         PanelCard("This week") {
             Row(
@@ -120,23 +194,20 @@ fun ProgressScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        PanelCard("Completion log") {
+        PanelCard("Activity history") {
             if (state.recent.isEmpty()) {
                 Text(
-                    "Accept activities or finish START resets to build history.",
+                    "Finish an Active Break timer to log your first activity win.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.onSurfaceMuted,
                 )
             } else {
-                val formatter = DateTimeFormatter.ofPattern("MMM d · HH:mm")
-                    .withZone(ZoneId.systemDefault())
                 state.recent.forEach { item ->
-                    Text(
-                        text = "• ${item.title} · ${item.durationMinutes} min · ${formatter.format(Instant.ofEpochMilli(item.completedAt))}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.onBackground,
-                        modifier = Modifier.padding(vertical = 4.dp),
+                    HistoryRow(
+                        item = item,
+                        timeLabel = formatter.format(Instant.ofEpochMilli(item.completedAt)),
                     )
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
             }
         }
@@ -146,10 +217,92 @@ fun ProgressScreen(
 }
 
 @Composable
+private fun HabitHistoryRow(
+    item: HabitCompletionEntity,
+    timeLabel: String,
+) {
+    val palette = LocalBtsPalette.current
+    val accent = Color(item.accentArgb.toLong() and 0xFFFFFFFFL)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(palette.background)
+            .border(1.dp, palette.border, RoundedCornerShape(16.dp))
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(accent.copy(alpha = 0.18f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Outlined.Spa, contentDescription = null, tint = accent)
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(item.habitTitle, style = MaterialTheme.typography.titleMedium, color = palette.onBackground)
+            Text("Habit · +2 min focus", style = MaterialTheme.typography.labelMedium, color = palette.highlight)
+            Text(timeLabel, style = MaterialTheme.typography.bodySmall, color = palette.onSurfaceMuted)
+        }
+    }
+}
+
+@Composable
+private fun HistoryRow(
+    item: ActivityCompletionEntity,
+    timeLabel: String,
+) {
+    val palette = LocalBtsPalette.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(palette.background)
+            .border(1.dp, palette.border, RoundedCornerShape(16.dp))
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (item.imageUrl.isNotBlank()) {
+            AsyncImage(
+                model = item.imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(palette.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = palette.primary)
+            }
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(item.title, style = MaterialTheme.typography.titleMedium, color = palette.onBackground)
+            Text(
+                "${item.category} · ${item.durationMinutes} min",
+                style = MaterialTheme.typography.labelMedium,
+                color = palette.highlight,
+            )
+            Text(timeLabel, style = MaterialTheme.typography.bodySmall, color = palette.onSurfaceMuted)
+        }
+    }
+}
+
+@Composable
 private fun MetricTile(
     label: String,
     value: String,
-    accent: androidx.compose.ui.graphics.Color,
+    accent: Color,
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalBtsPalette.current

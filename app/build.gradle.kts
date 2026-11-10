@@ -14,8 +14,8 @@ android {
         applicationId = "com.breakthescroll.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.2.0"
+        versionCode = 5
+        versionName = "0.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

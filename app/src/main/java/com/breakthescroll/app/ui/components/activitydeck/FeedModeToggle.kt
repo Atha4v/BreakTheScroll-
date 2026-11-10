@@ -40,7 +40,7 @@ fun FeedModeToggle(
                 label = {
                     Text(
                         text = when (mode) {
-                            FeedMode.ForYou -> stringResource(R.string.feed_for_you)
+                            FeedMode.Hybrid -> stringResource(R.string.feed_hybrid)
                             FeedMode.Serendipity -> stringResource(R.string.feed_serendipity)
                         },
                         style = MaterialTheme.typography.labelLarge,

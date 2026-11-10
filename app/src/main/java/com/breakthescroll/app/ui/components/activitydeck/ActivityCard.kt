@@ -24,10 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.breakthescroll.app.ui.components.illustrations.ActivityHeroIllustration
 import com.breakthescroll.app.ui.model.ActivityChallenge
 import com.breakthescroll.app.ui.theme.LocalBtsPalette
@@ -54,14 +57,35 @@ fun ActivityCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(168.dp)
+                        .height(176.dp)
                         .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
                 ) {
-                    ActivityHeroIllustration(
-                        kind = challenge.illustration,
-                        heroColors = challenge.heroColors,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                    if (challenge.imageUrl.isNotBlank()) {
+                        AsyncImage(
+                            model = challenge.imageUrl,
+                            contentDescription = challenge.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            palette.surface.copy(alpha = 0.55f),
+                                        ),
+                                    ),
+                                ),
+                        )
+                    } else {
+                        ActivityHeroIllustration(
+                            kind = challenge.illustration,
+                            heroColors = challenge.heroColors,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -84,7 +108,7 @@ fun ActivityCard(
                             color = palette.highlightContainer.copy(alpha = 0.92f),
                         ) {
                             Text(
-                                text = "${challenge.durationMinutes} min",
+                                text = formatEngageLabel(challenge.durationSeconds),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = palette.highlight,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -153,7 +177,7 @@ fun ActivityCard(
                             )
                         }
                         Text(
-                            text = "Effort",
+                            text = if (challenge.isPersonalized) "For you" else "Serendipity",
                             style = MaterialTheme.typography.labelMedium,
                             color = palette.onSurfaceMuted,
                             modifier = Modifier.padding(start = 4.dp),
@@ -162,9 +186,19 @@ fun ActivityCard(
                 }
             }
 
-            SwipeStamp("ACCEPT", palette.primary, acceptAlpha, Alignment.CenterStart, -12f)
+            SwipeStamp("ENGAGE", palette.primary, acceptAlpha, Alignment.CenterStart, -12f)
             SwipeStamp("PASS", palette.error, passAlpha, Alignment.CenterEnd, 12f)
         }
+    }
+}
+
+private fun formatEngageLabel(durationSeconds: Int): String {
+    return if (durationSeconds < 60) {
+        "${durationSeconds}s timer"
+    } else {
+        val m = durationSeconds / 60
+        val s = durationSeconds % 60
+        if (s == 0) "${m}m timer" else "${m}m ${s}s timer"
     }
 }
 

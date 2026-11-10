@@ -53,7 +53,6 @@ import com.breakthescroll.app.ui.theme.OnSurfaceSecondary
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-
 enum class DeckSwipeAction {
     Accept,
     Pass,
@@ -73,6 +72,9 @@ private val SwipeReturnSpring = spring<Offset>(
 fun ActivityFlashCardDeck(
     challenges: List<ActivityChallenge>,
     modifier: Modifier = Modifier,
+    engagementLocked: Boolean = false,
+    completedChallengeId: String? = null,
+    onCompletedConsumed: () -> Unit = {},
     onAccepted: (ActivityChallenge) -> Unit = {},
     onPassed: (ActivityChallenge) -> Unit = {},
     onDeckExhausted: () -> Unit = {},
@@ -93,16 +95,33 @@ fun ActivityFlashCardDeck(
         isAnimatingOut = false
     }
 
+    // Drop card only after Active Break writes to Room — cancel keeps the card.
+    LaunchedEffect(completedChallengeId) {
+        val id = completedChallengeId ?: return@LaunchedEffect
+        if (remaining.any { it.id == id }) {
+            remaining = remaining.filterNot { it.id == id }
+            activeIndex += 1
+            offset.snapTo(Offset.Zero)
+            if (remaining.isEmpty()) onDeckExhausted()
+        }
+        onCompletedConsumed()
+    }
+
     val topCard = remaining.firstOrNull()
     val stackedCards = remaining.drop(1).take(2)
     val totalCount = challenges.size
-    val completedCount = (activeIndex).coerceAtMost(totalCount)
+    val completedCount = activeIndex.coerceAtMost(totalCount)
+    val interactionsEnabled = !engagementLocked && !isAnimatingOut
 
     fun settleOrSwipe(
         velocity: Offset,
         cardWidthPx: Float,
         challenge: ActivityChallenge,
     ) {
+        if (engagementLocked) {
+            scope.launch { offset.animateTo(Offset.Zero, SwipeReturnSpring) }
+            return
+        }
         scope.launch {
             val horizontal = offset.value.x
             val threshold = cardWidthPx * 0.28f
@@ -111,26 +130,28 @@ fun ActivityFlashCardDeck(
             val shouldPass = horizontal < -threshold || (fling && velocity.x < 0f)
 
             when {
-                shouldAccept || shouldPass -> {
+                shouldAccept -> {
                     isAnimatingOut = true
-                    val direction = if (shouldAccept) 1f else -1f
+                    val target = Offset(x = cardWidthPx * 0.55f, y = offset.value.y - 24f)
+                    offset.animateTo(target, tween(180))
+                    onAccepted(challenge)
+                    // Keep card — Active Break owns completion. Snap back under the overlay.
+                    offset.animateTo(Offset.Zero, SwipeReturnSpring)
+                    isAnimatingOut = false
+                }
+                shouldPass -> {
+                    isAnimatingOut = true
                     val target = Offset(
-                        x = direction * cardWidthPx * 1.45f,
-                        y = offset.value.y + (direction * 40f),
+                        x = -cardWidthPx * 1.45f,
+                        y = offset.value.y + 40f,
                     )
                     offset.animateTo(target, SwipeExitSpring)
-                    if (shouldAccept) {
-                        onAccepted(challenge)
-                    } else {
-                        onPassed(challenge)
-                    }
+                    onPassed(challenge)
                     remaining = remaining.drop(1)
                     activeIndex += 1
                     offset.snapTo(Offset.Zero)
                     isAnimatingOut = false
-                    if (remaining.isEmpty()) {
-                        onDeckExhausted()
-                    }
+                    if (remaining.isEmpty()) onDeckExhausted()
                 }
                 else -> offset.animateTo(Offset.Zero, SwipeReturnSpring)
             }
@@ -139,26 +160,29 @@ fun ActivityFlashCardDeck(
 
     fun programmaticSwipe(action: DeckSwipeAction) {
         val challenge = remaining.firstOrNull() ?: return
-        if (isAnimatingOut) return
+        if (!interactionsEnabled) return
         scope.launch {
             isAnimatingOut = true
             val cardWidthPx = with(density) { 320.dp.toPx() }
-            val direction = if (action == DeckSwipeAction.Accept) 1f else -1f
-            offset.animateTo(
-                targetValue = Offset(x = direction * cardWidthPx * 1.45f, y = -80f),
-                animationSpec = tween(durationMillis = 280),
-            )
             if (action == DeckSwipeAction.Accept) {
+                offset.animateTo(
+                    targetValue = Offset(x = cardWidthPx * 0.45f, y = -40f),
+                    animationSpec = tween(durationMillis = 200),
+                )
                 onAccepted(challenge)
+                offset.animateTo(Offset.Zero, SwipeReturnSpring)
+                isAnimatingOut = false
             } else {
+                offset.animateTo(
+                    targetValue = Offset(x = -cardWidthPx * 1.45f, y = -80f),
+                    animationSpec = tween(durationMillis = 280),
+                )
                 onPassed(challenge)
-            }
-            remaining = remaining.drop(1)
-            activeIndex += 1
-            offset.snapTo(Offset.Zero)
-            isAnimatingOut = false
-            if (remaining.isEmpty()) {
-                onDeckExhausted()
+                remaining = remaining.drop(1)
+                activeIndex += 1
+                offset.snapTo(Offset.Zero)
+                isAnimatingOut = false
+                if (remaining.isEmpty()) onDeckExhausted()
             }
         }
     }
@@ -246,9 +270,10 @@ fun ActivityFlashCardDeck(
                                 translationX = offset.value.x
                                 translationY = offset.value.y
                                 rotationZ = rotation
+                                alpha = if (engagementLocked) 0.72f else 1f
                             }
-                            .pointerInput(topCard.id, isAnimatingOut) {
-                                if (isAnimatingOut) return@pointerInput
+                            .pointerInput(topCard.id, interactionsEnabled) {
+                                if (!interactionsEnabled) return@pointerInput
                                 detectDragGestures(
                                     onDragStart = { dragVelocityX = 0f },
                                     onDragEnd = {
@@ -265,7 +290,6 @@ fun ActivityFlashCardDeck(
                                     },
                                     onDrag = { change, dragAmount ->
                                         change.consume()
-                                        // Frame-scaled horizontal velocity estimate for fling settle.
                                         dragVelocityX = (dragAmount.x * 60f).coerceIn(-6000f, 6000f)
                                         scope.launch {
                                             offset.snapTo(offset.value + dragAmount)
@@ -281,7 +305,7 @@ fun ActivityFlashCardDeck(
         Spacer(modifier = Modifier.height(8.dp))
 
         DeckActionRow(
-            enabled = topCard != null && !isAnimatingOut,
+            enabled = topCard != null && interactionsEnabled,
             onPass = { programmaticSwipe(DeckSwipeAction.Pass) },
             onAccept = { programmaticSwipe(DeckSwipeAction.Accept) },
         )
@@ -378,4 +402,3 @@ private fun EmptyDeckState() {
         )
     }
 }
-

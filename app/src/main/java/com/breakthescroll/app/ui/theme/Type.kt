@@ -7,12 +7,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 val BreakTheScrollTypography = Typography(
+    displayLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 48.sp,
+        lineHeight = 52.sp,
+        letterSpacing = (-0.5).sp,
+    ),
     displaySmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
         lineHeight = 34.sp,
         letterSpacing = (-0.3).sp,
+    ),
+    headlineLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 28.sp,
+        lineHeight = 34.sp,
     ),
     headlineMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
