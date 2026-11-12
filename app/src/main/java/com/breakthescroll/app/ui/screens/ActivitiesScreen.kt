@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,23 +49,22 @@ fun ActivitiesScreen(
         modifier = modifier
             .fillMaxSize()
             .background(palette.background)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp, vertical = 8.dp),
     ) {
         Text(
             text = greeting,
-            style = MaterialTheme.typography.displaySmall,
+            style = MaterialTheme.typography.headlineLarge,
             color = palette.onBackground,
         )
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         ScrollBuddyBanner(mood = buddyMood, customMessage = buddyMessage)
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         FeedModeToggle(
             selected = feedMode,
             onSelected = onFeedModeChange,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         ActivityFlashCardDeck(
             challenges = challenges,
             engagementLocked = engagementLocked,
@@ -75,8 +72,9 @@ fun ActivitiesScreen(
             onCompletedConsumed = onCompletedConsumed,
             onAccepted = onAccepted,
             onPassed = onPassed,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
         )
-        Spacer(modifier = Modifier.height(88.dp))
     }
 }

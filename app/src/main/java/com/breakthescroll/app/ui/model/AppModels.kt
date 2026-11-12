@@ -19,8 +19,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.breakthescroll.app.data.local.entity.ActivityCatalogEntity
 
 enum class FeedMode {
-    Hybrid,
-    Serendipity,
+    ForYou,
+    Serendipity, // UI label: Random
 }
 
 enum class BuddyMood {

@@ -75,13 +75,7 @@ fun ProgressScreen(
             style = MaterialTheme.typography.displaySmall,
             color = palette.onBackground,
         )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Activities · habits · streaks — one live receipt",
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.onSurfaceMuted,
-        )
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         ScrollBuddyBanner(mood = buddyMood, customMessage = buddyMessage)
         Spacer(modifier = Modifier.height(16.dp))
@@ -98,12 +92,40 @@ fun ProgressScreen(
             MetricTile("Tasks done", "${state.stats.tasksCompleted}", palette.highlight, Modifier.weight(1f))
         }
 
+        if (state.stats.quickRescues > 0) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(palette.primaryContainer.copy(alpha = 0.55f))
+                    .border(1.dp, palette.primary.copy(alpha = 0.35f), RoundedCornerShape(18.dp))
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text("⚡", style = MaterialTheme.typography.headlineSmall)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.quick_rescue_badge),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = palette.onBackground,
+                    )
+                    Text(
+                        text = "${state.stats.quickRescues} instant breaker${if (state.stats.quickRescues == 1) "" else "s"}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.onSurfaceMuted,
+                    )
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(18.dp))
 
         PanelCard("Habits completed today") {
             if (state.habitsToday.isEmpty()) {
                 Text(
-                    "No habits logged today — check one off in Habits.",
+                    "None yet today.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.onSurfaceMuted,
                 )
@@ -123,7 +145,7 @@ fun ProgressScreen(
         PanelCard("Habits this week") {
             if (state.habitsWeek.isEmpty()) {
                 Text(
-                    "Weekly habit timeline appears as you complete routines.",
+                    "Empty this week.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.onSurfaceMuted,
                 )
@@ -197,7 +219,7 @@ fun ProgressScreen(
         PanelCard("Activity history") {
             if (state.recent.isEmpty()) {
                 Text(
-                    "Finish an Active Break timer to log your first activity win.",
+                    "No activity wins yet.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.onSurfaceMuted,
                 )

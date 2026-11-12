@@ -35,19 +35,21 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import com.breakthescroll.app.ui.buddy.HoneyBadgerManager
 import com.breakthescroll.app.ui.model.BuddyMood
+import com.breakthescroll.app.ui.model.BuddyScreenContext
 import com.breakthescroll.app.ui.theme.BuddyBadgerCream
 import com.breakthescroll.app.ui.theme.BuddyBadgerFur
 import com.breakthescroll.app.ui.theme.BuddyBadgerStripe
 import com.breakthescroll.app.ui.theme.LocalBtsPalette
 
-fun buddyPromptFor(mood: BuddyMood): String = when (mood) {
-    BuddyMood.Idle -> "The algorithm isn't your friend, but I am. Let's do this."
-    BuddyMood.Working -> "Eyes on the ring. Feeds can wait — badgers don't multitask nonsense."
-    BuddyMood.Cheer -> "That's persistence, chief. Scrolling couldn't have done that 🦡"
-    BuddyMood.Rest -> "Rest is a feature, not a bug. Phone face-down."
-    BuddyMood.Nudge -> "Scrolling won't fix your code. Take two minutes and actually move."
-}
+fun buddyPromptFor(mood: BuddyMood): String =
+    HoneyBadgerManager.quote(
+        context = BuddyScreenContext.Activities,
+        mood = mood,
+        streak = 0,
+        tasksCompleted = 1,
+    )
 
 @Composable
 fun ScrollBuddyBanner(

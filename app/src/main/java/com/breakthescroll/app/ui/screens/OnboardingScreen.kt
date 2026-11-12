@@ -73,7 +73,7 @@ fun OnboardingScreen(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Pick topics. We build a 50/50 deck — half yours, half surprise wellness.",
+            text = "For You stays personal. Random stays exploratory.",
             style = MaterialTheme.typography.bodyMedium,
             color = palette.onSurfaceMuted,
             textAlign = TextAlign.Center,

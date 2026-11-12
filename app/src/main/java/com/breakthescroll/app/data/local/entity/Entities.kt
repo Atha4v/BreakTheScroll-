@@ -23,6 +23,8 @@ data class UserStatsEntity(
     val lastCompletionEpochDay: Long? = null,
     val screenTimeSavedMinutes: Int = 0,
     val tasksCompleted: Int = 0,
+    /** Completions from the 1-tap Instant Scroll Breaker (START). */
+    val quickRescues: Int = 0,
 )
 
 @Entity(tableName = "habits")

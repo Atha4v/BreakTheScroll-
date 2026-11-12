@@ -5,7 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -21,7 +20,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,14 +28,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.GraphicEq
-import androidx.compose.material.icons.outlined.Vibration
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,7 +41,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -59,7 +49,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -67,22 +56,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import coil.compose.AsyncImage
+import com.breakthescroll.app.ui.buddy.HoneyBadgerManager
 import com.breakthescroll.app.ui.components.buddy.HoneyBadgerAvatar
 import com.breakthescroll.app.ui.model.ActivityChallenge
+import com.breakthescroll.app.ui.model.ActivityGuides
 import com.breakthescroll.app.ui.model.BuddyMood
 import com.breakthescroll.app.ui.theme.LocalBtsPalette
 import kotlinx.coroutines.delay
 
-private enum class ActiveBreakPhase {
-    Counting,
-    Success,
-}
+private enum class ActiveBreakPhase { Counting, Success }
 
-/**
- * Headspace / Endel-inspired Active Break.
- * Countdown length comes from [ActivityChallenge.durationSeconds] in Room — never a hardcoded 25s.
- */
 @Composable
 fun EngagementTimerModal(
     challenge: ActivityChallenge,
@@ -94,6 +77,10 @@ fun EngagementTimerModal(
     val haptics = LocalHapticFeedback.current
     val totalSeconds = challenge.durationSeconds.coerceAtLeast(15)
     val totalMs = totalSeconds * 1000L
+    val steps = remember(challenge.id) {
+        ActivityGuides.stepsFor(challenge.id, challenge.category)
+    }
+    val buddyLine = remember(challenge.id) { HoneyBadgerManager.quoteForTimer() }
 
     var remainingMs by remember(challenge.id) { mutableLongStateOf(totalMs) }
     var phase by remember(challenge.id) { mutableStateOf(ActiveBreakPhase.Counting) }
@@ -101,27 +88,19 @@ fun EngagementTimerModal(
 
     val progress = 1f - (remainingMs.toFloat() / totalMs.toFloat()).coerceIn(0f, 1f)
     val remainingSeconds = ((remainingMs + 999) / 1000).toInt().coerceAtLeast(0)
+    val clock = "%d:%02d".format(remainingSeconds / 60, remainingSeconds % 60)
 
     val breath = rememberInfiniteTransition(label = "breath")
     val pulse by breath.animateFloat(
-        initialValue = 0.94f,
-        targetValue = 1.06f,
+        initialValue = 0.96f,
+        targetValue = 1.04f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
+            animation = tween(2600, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
         ),
         label = "pulse",
     )
-    val glow by breath.animateFloat(
-        initialValue = 0.28f,
-        targetValue = 0.72f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "glow",
-    )
-    val successScale = remember { Animatable(0.65f) }
+    val successScale = remember { Animatable(0.7f) }
 
     BackHandler(enabled = phase == ActiveBreakPhase.Counting, onBack = onDismiss)
 
@@ -132,8 +111,7 @@ fun EngagementTimerModal(
         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
         val startedAt = SystemClock.elapsedRealtime()
         while (true) {
-            val elapsed = SystemClock.elapsedRealtime() - startedAt
-            val left = (totalMs - elapsed).coerceAtLeast(0L)
+            val left = (totalMs - (SystemClock.elapsedRealtime() - startedAt)).coerceAtLeast(0L)
             remainingMs = left
             val whole = ((left + 999) / 1000).toInt()
             if (whole != lastWholeSecond && whole > 0) {
@@ -145,18 +123,14 @@ fun EngagementTimerModal(
         }
         phase = ActiveBreakPhase.Success
         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-        successScale.snapTo(0.65f)
-        successScale.animateTo(1f, spring(dampingRatio = 0.55f, stiffness = 360f))
-        delay(1_400)
+        successScale.snapTo(0.7f)
+        successScale.animateTo(1f, spring(dampingRatio = 0.55f, stiffness = 340f))
+        delay(1_200)
         onCompleted()
     }
 
-    val clock = formatClock(remainingSeconds)
-
     Dialog(
-        onDismissRequest = {
-            if (phase == ActiveBreakPhase.Counting) onDismiss()
-        },
+        onDismissRequest = { if (phase == ActiveBreakPhase.Counting) onDismiss() },
         properties = DialogProperties(
             dismissOnBackPress = phase == ActiveBreakPhase.Counting,
             dismissOnClickOutside = false,
@@ -164,61 +138,89 @@ fun EngagementTimerModal(
         ),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF070B12)),
+            modifier = Modifier.fillMaxSize(),
         ) {
-            if (challenge.imageUrl.isNotBlank()) {
-                AsyncImage(
-                    model = challenge.imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { alpha = 0.28f },
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                palette.primary.copy(alpha = 0.22f),
-                                Color.Transparent,
-                                Color(0xFF05080F),
-                            ),
+            // Immersive calm backdrop — soft radial wash + breathing orbs
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val w = size.width
+                val h = size.height
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            palette.background,
+                            if (palette.isDark) Color(0xFF132033) else Color(0xFFF1F5F9),
+                            palette.primaryContainer.copy(alpha = if (palette.isDark) 0.55f else 0.45f),
+                            palette.background,
                         ),
                     ),
-            )
+                )
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            palette.primary.copy(alpha = if (palette.isDark) 0.22f else 0.18f),
+                            Color.Transparent,
+                        ),
+                        center = Offset(w * 0.5f, h * 0.38f),
+                        radius = w * 0.55f,
+                    ),
+                    center = Offset(w * 0.5f, h * 0.38f),
+                    radius = w * 0.55f,
+                )
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            palette.highlight.copy(alpha = if (palette.isDark) 0.14f else 0.12f),
+                            Color.Transparent,
+                        ),
+                        center = Offset(w * 0.18f, h * 0.78f),
+                        radius = w * 0.42f,
+                    ),
+                    center = Offset(w * 0.18f, h * 0.78f),
+                    radius = w * 0.42f,
+                )
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            palette.primary.copy(alpha = 0.10f),
+                            Color.Transparent,
+                        ),
+                        center = Offset(w * 0.88f, h * 0.18f),
+                        radius = w * 0.35f,
+                    ),
+                    center = Offset(w * 0.88f, h * 0.18f),
+                    radius = w * 0.35f,
+                )
+            }
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
                     .navigationBarsPadding()
-                    .padding(horizontal = 22.dp, vertical = 14.dp),
+                    .padding(horizontal = 28.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "ACTIVE BREAK",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        letterSpacing = 2.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    ),
-                    color = palette.highlight,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = challenge.title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
+                    text = if (challenge.id.startsWith("rescue-")) "Instant Scroll Breaker" else challenge.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = palette.onBackground,
                     textAlign = TextAlign.Center,
                 )
+                if (challenge.id.startsWith("rescue-")) {
+                    Text(
+                        text = challenge.title,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = palette.primary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 6.dp),
+                    )
+                }
                 Text(
-                    text = "${challenge.category} · ${formatDurationLabel(totalSeconds)} session",
+                    text = buddyLine,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.65f),
+                    color = palette.onSurfaceMuted,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 6.dp, start = 12.dp, end = 12.dp),
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -226,35 +228,34 @@ fun EngagementTimerModal(
                 AnimatedContent(
                     targetState = phase,
                     transitionSpec = {
-                        (fadeIn(tween(220)) + scaleIn(initialScale = 0.94f)) togetherWith
-                            fadeOut(tween(140))
+                        (fadeIn(tween(200)) + scaleIn(initialScale = 0.95f)) togetherWith
+                            fadeOut(tween(120))
                     },
-                    label = "breakPhase",
+                    label = "timerPhase",
                 ) { current ->
                     when (current) {
                         ActiveBreakPhase.Counting -> {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier.size(300.dp),
+                                    modifier = Modifier.size(280.dp),
                                 ) {
                                     Canvas(
                                         modifier = Modifier
-                                            .size(300.dp)
+                                            .size(280.dp)
                                             .graphicsLayer {
                                                 scaleX = pulse
                                                 scaleY = pulse
-                                                alpha = 0.5f + glow * 0.45f
                                             },
                                     ) {
-                                        val stroke = 16.dp.toPx()
+                                        val stroke = 12.dp.toPx()
                                         val diameter = size.minDimension - stroke
                                         val topLeft = Offset(
                                             (size.width - diameter) / 2f,
                                             (size.height - diameter) / 2f,
                                         )
                                         drawArc(
-                                            color = Color.White.copy(alpha = 0.10f),
+                                            color = palette.border.copy(alpha = 0.55f),
                                             startAngle = -90f,
                                             sweepAngle = 360f,
                                             useCenter = false,
@@ -263,14 +264,7 @@ fun EngagementTimerModal(
                                             style = Stroke(width = stroke, cap = StrokeCap.Round),
                                         )
                                         drawArc(
-                                            brush = Brush.sweepGradient(
-                                                listOf(
-                                                    palette.primary.copy(alpha = 0.35f),
-                                                    palette.primary,
-                                                    palette.highlight,
-                                                    palette.primary,
-                                                ),
-                                            ),
+                                            color = palette.primary,
                                             startAngle = -90f,
                                             sweepAngle = 360f * progress,
                                             useCenter = false,
@@ -282,37 +276,30 @@ fun EngagementTimerModal(
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         HoneyBadgerAvatar(
                                             mood = BuddyMood.Working,
-                                            modifier = Modifier
-                                                .size(72.dp)
-                                                .graphicsLayer {
-                                                    scaleX = pulse
-                                                    scaleY = pulse
-                                                },
+                                            modifier = Modifier.size(56.dp),
                                         )
-                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Spacer(modifier = Modifier.height(6.dp))
                                         Text(
                                             text = clock,
                                             style = MaterialTheme.typography.displayLarge.copy(
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 52.sp,
-                                                letterSpacing = (-1).sp,
+                                                fontSize = 56.sp,
+                                                letterSpacing = (-1.5).sp,
                                             ),
-                                            color = Color.White,
-                                        )
-                                        Text(
-                                            text = "breathe with the ring",
-                                            style = MaterialTheme.typography.labelLarge,
-                                            color = Color.White.copy(alpha = 0.62f),
+                                            color = palette.onBackground,
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    HintChip(Icons.Outlined.Vibration, "Haptics")
-                                    HintChip(Icons.Outlined.GraphicEq, "Stay present")
+
+                                Spacer(modifier = Modifier.height(28.dp))
+                                steps.take(2).forEachIndexed { index, step ->
+                                    Text(
+                                        text = step,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = if (index == 0) palette.onBackground else palette.onSurfaceMuted,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                    )
                                 }
                             }
                         }
@@ -324,37 +311,21 @@ fun EngagementTimerModal(
                                     scaleY = successScale.value
                                 },
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clip(CircleShape)
-                                        .background(palette.primary.copy(alpha = 0.2f)),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    HoneyBadgerAvatar(
-                                        mood = BuddyMood.Cheer,
-                                        modifier = Modifier.size(76.dp),
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
+                                HoneyBadgerAvatar(mood = BuddyMood.Cheer, modifier = Modifier.size(72.dp))
+                                Spacer(modifier = Modifier.height(14.dp))
                                 Text(
-                                    text = "Break complete 🔥",
+                                    text = if (challenge.id.startsWith("rescue-")) "Rescue complete" else "Done 🔥",
                                     style = MaterialTheme.typography.headlineLarge,
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
+                                    color = palette.onBackground,
                                 )
                                 Text(
-                                    text = "Saving to history · streak warming up",
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    text = when {
+                                        challenge.id.startsWith("rescue-") -> "+1 Quick Rescue"
+                                        currentStreak > 0 -> "Streak warming · ${currentStreak + 1}"
+                                        else -> "Saved to history"
+                                    },
                                     color = palette.highlight,
                                 )
-                                if (currentStreak > 0) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "🔥 ${currentStreak + 1}-day energy incoming",
-                                        color = Color.White.copy(alpha = 0.85f),
-                                    )
-                                }
                             }
                         }
                     }
@@ -363,70 +334,21 @@ fun EngagementTimerModal(
                 Spacer(modifier = Modifier.weight(1f))
 
                 if (phase == ActiveBreakPhase.Counting) {
-                    Button(
-                        onClick = {},
-                        enabled = false,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            disabledContainerColor = Color.White.copy(alpha = 0.10f),
-                            disabledContentColor = Color.White.copy(alpha = 0.5f),
-                        ),
-                    ) {
-                        Text("Timer locked · $clock remaining")
-                    }
                     TextButton(onClick = onDismiss) {
-                        Text("Give up — return to feed", color = Color.White.copy(alpha = 0.7f))
+                        Text("Give up", color = palette.onSurfaceMuted)
                     }
                 } else {
-                    Row(
+                    Text(
+                        "Saving…",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = palette.primary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(palette.primary.copy(alpha = 0.18f))
-                            .padding(vertical = 14.dp),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        Text(
-                            "Recording win…",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = palette.primary,
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(36.dp))
+                            .padding(bottom = 24.dp),
+                        textAlign = TextAlign.Center,
+                    )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun HintChip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(Color.White.copy(alpha = 0.08f))
-            .padding(horizontal = 12.dp, vertical = 7.dp),
-    ) {
-        Icon(icon, contentDescription = null, tint = Color.White.copy(alpha = 0.75f), modifier = Modifier.size(16.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.75f))
-    }
-}
-
-private fun formatClock(totalSeconds: Int): String {
-    val m = totalSeconds / 60
-    val s = totalSeconds % 60
-    return "%d:%02d".format(m, s)
-}
-
-private fun formatDurationLabel(totalSeconds: Int): String {
-    return if (totalSeconds < 60) {
-        "${totalSeconds}s"
-    } else {
-        val m = totalSeconds / 60
-        val s = totalSeconds % 60
-        if (s == 0) "${m}m" else "${m}m ${s}s"
     }
 }

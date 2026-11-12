@@ -141,12 +141,35 @@ class AppRepository(private val db: BreakTheScrollDatabase) {
 
     fun observeCatalog(): Flow<List<ActivityCatalogEntity>> = catalogDao.observeAll()
 
-    fun observeHybridDeck(): Flow<List<ActivityCatalogEntity>> =
+    /** 100% preference-matched activities — no serendipity mixed in. */
+    fun observeForYouDeck(): Flow<List<ActivityCatalogEntity>> =
         combine(catalogDao.observeAll(), observeInterests()) { catalog, interests ->
-            buildHybridDeck(catalog, interests)
+            buildForYouDeck(catalog, interests)
         }
 
-    fun observeSerendipity(): Flow<List<ActivityCatalogEntity>> = catalogDao.observeSerendipity()
+    /** 100% serendipitous wellness — never preference-filtered. */
+    fun observeSerendipity(): Flow<List<ActivityCatalogEntity>> =
+        catalogDao.observeSerendipity().map { it.shuffled() }
+
+    suspend fun completeCustomActivity(
+        activityId: String,
+        title: String,
+        category: String,
+        durationMinutes: Int,
+        imageUrl: String = "",
+        isQuickRescue: Boolean = false,
+    ) {
+        completionsDao.insert(
+            ActivityCompletionEntity(
+                activityId = activityId,
+                title = title,
+                category = category,
+                durationMinutes = durationMinutes,
+                imageUrl = imageUrl,
+            ),
+        )
+        bumpStats(durationMinutes.coerceAtLeast(1), incrementQuickRescue = isQuickRescue)
+    }
 
     fun observeRecentCompletions(limit: Int = 40): Flow<List<ActivityCompletionEntity>> =
         completionsDao.observeRecent(limit)
@@ -333,7 +356,7 @@ class AppRepository(private val db: BreakTheScrollDatabase) {
         groupsDao.update(group.copy(memberCount = count))
     }
 
-    private suspend fun bumpStats(minutes: Int) {
+    private suspend fun bumpStats(minutes: Int, incrementQuickRescue: Boolean = false) {
         val current = statsDao.get() ?: UserStatsEntity()
         val today = LocalDate.now().toEpochDay()
         val yesterday = today - 1
@@ -350,6 +373,7 @@ class AppRepository(private val db: BreakTheScrollDatabase) {
                 lastCompletionEpochDay = today,
                 screenTimeSavedMinutes = current.screenTimeSavedMinutes + minutes,
                 tasksCompleted = current.tasksCompleted + 1,
+                quickRescues = current.quickRescues + if (incrementQuickRescue) 1 else 0,
             ),
         )
     }
@@ -384,28 +408,19 @@ class AppRepository(private val db: BreakTheScrollDatabase) {
     }
 
     companion object {
-        fun buildHybridDeck(
+        fun buildForYouDeck(
             catalog: List<ActivityCatalogEntity>,
             interests: Set<String>,
         ): List<ActivityCatalogEntity> {
             if (catalog.isEmpty()) return emptyList()
-            val personalized = if (interests.isEmpty()) {
+            val matched = if (interests.isEmpty()) {
                 catalog.filter { it.isPersonalized }
             } else {
                 catalog.filter { it.interestTag in interests }
-                    .ifEmpty { catalog.filter { it.isPersonalized } }
             }
-            val serendipity = catalog.filter { !it.isPersonalized }
-                .ifEmpty { catalog.filter { it.interestTag == "Wellness" } }
-
-            val target = minOf(8, catalog.size)
-            val half = (target + 1) / 2
-            val personalPick = personalized.shuffled().take(half)
-            val randomPick = serendipity
-                .filter { candidate -> personalPick.none { it.id == candidate.id } }
-                .shuffled()
-                .take(target - personalPick.size)
-            return (personalPick + randomPick).shuffled()
+            return matched.shuffled().ifEmpty {
+                catalog.filter { it.isPersonalized }.shuffled()
+            }
         }
     }
 }

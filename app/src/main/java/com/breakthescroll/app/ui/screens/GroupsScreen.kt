@@ -31,12 +31,14 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
@@ -46,6 +48,7 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -59,6 +62,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.breakthescroll.app.R
 import com.breakthescroll.app.data.local.entity.ActivityCompletionEntity
@@ -124,7 +128,7 @@ fun GroupsScreen(
                         color = palette.onBackground,
                     )
                     Text(
-                        text = "@$username · squads & wins",
+                        text = "@$username",
                         style = MaterialTheme.typography.bodyMedium,
                         color = palette.onSurfaceMuted,
                     )
@@ -183,9 +187,7 @@ fun GroupsScreen(
                         )
                     }
                     if (posts.isEmpty()) {
-                        item {
-                            EmptyHint("No posts yet — complete an Active Break, then share it here.")
-                        }
+                        item { EmptyHint("No posts yet.") }
                     } else {
                         items(posts, key = { it.id }) { post ->
                             CommunityPostCard(
@@ -206,7 +208,7 @@ fun GroupsScreen(
                 ) {
                     item { Spacer(Modifier.height(8.dp)) }
                     if (myGroups.isEmpty()) {
-                        item { EmptyHint("You’re not in any groups yet. Create one or Discover public squads.") }
+                        item { EmptyHint("No groups yet. Create or Discover.") }
                     } else {
                         items(myGroups, key = { it.id }) { group ->
                             GroupCard(
@@ -242,7 +244,7 @@ fun GroupsScreen(
                         )
                     }
                     if (discoverGroups.isEmpty()) {
-                        item { EmptyHint("No public groups match. Create the first one.") }
+                        item { EmptyHint("No matches.") }
                     } else {
                         items(discoverGroups, key = { it.id }) { group ->
                             val joined = myGroups.any { it.id == group.id }
@@ -386,9 +388,9 @@ private fun ShareStrip(latestTitle: String?, onShare: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text("Share a milestone", style = MaterialTheme.typography.titleMedium, color = palette.onBackground)
+            Text("Share win", style = MaterialTheme.typography.titleMedium, color = palette.onBackground)
             Text(
-                latestTitle?.let { "Latest: $it" } ?: "Complete an Active Break first",
+                latestTitle ?: "Finish a break first",
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.onSurfaceMuted,
             )
@@ -404,6 +406,36 @@ private fun ShareStrip(latestTitle: String?, onShare: () -> Unit) {
 }
 
 @Composable
+private fun MemberAvatarStack(owner: String, memberCount: Int) {
+    val palette = LocalBtsPalette.current
+    val initials = buildList {
+        add(owner.take(1).uppercase().ifBlank { "Y" })
+        if (memberCount > 1) add("M")
+        if (memberCount > 2) add("+")
+    }
+    Row {
+        initials.forEachIndexed { index, letter ->
+            Box(
+                modifier = Modifier
+                    .zIndex((initials.size - index).toFloat())
+                    .padding(start = if (index == 0) 0.dp else (-10).dp)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(if (index == 0) palette.primaryContainer else palette.background)
+                    .border(1.5.dp, palette.surface, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = letter,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = palette.primary,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun GroupCard(
     group: SquadGroupEntity,
     joined: Boolean,
@@ -414,24 +446,31 @@ private fun GroupCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(22.dp))
             .background(palette.surface)
-            .border(1.dp, palette.border, RoundedCornerShape(20.dp))
+            .border(1.dp, palette.border, RoundedCornerShape(22.dp))
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(group.name, style = MaterialTheme.typography.titleLarge, color = palette.onBackground)
-                Text(
-                    "${group.category} · ${group.memberCount} members · ${if (group.isPublic) "Public" else "Private"}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = palette.onSurfaceMuted,
-                )
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MemberAvatarStack(owner = group.ownerUsername, memberCount = group.memberCount)
+                Column {
+                    Text(group.name, style = MaterialTheme.typography.titleLarge, color = palette.onBackground)
+                    Text(
+                        "${group.category} · ${group.memberCount}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = palette.onSurfaceMuted,
+                    )
+                }
             }
             Button(
                 onClick = onPrimary,
@@ -448,13 +487,13 @@ private fun GroupCard(
             }
         }
         if (group.description.isNotBlank()) {
-            Text(group.description, style = MaterialTheme.typography.bodyMedium, color = palette.onSurfaceMuted)
+            Text(
+                group.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.onSurfaceMuted,
+                maxLines = 2,
+            )
         }
-        Text(
-            text = "Owner @${group.ownerUsername}",
-            style = MaterialTheme.typography.labelLarge,
-            color = palette.highlight,
-        )
     }
 }
 
@@ -512,17 +551,26 @@ private fun CommunityPostCard(
                         color = palette.onBackground,
                     )
                     Text(
-                        text = "${post.category} · $timeLabel",
+                        text = "$timeLabel",
                         style = MaterialTheme.typography.labelMedium,
                         color = palette.onSurfaceMuted,
                     )
                 }
             }
+            Spacer(Modifier.height(12.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(palette.background)
+                    .padding(14.dp),
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(post.message, style = MaterialTheme.typography.bodyLarge, color = palette.onBackground)
+                    Text(post.activityTitle, style = MaterialTheme.typography.labelLarge, color = palette.highlight)
+                }
+            }
             Spacer(Modifier.height(10.dp))
-            Text(post.message, style = MaterialTheme.typography.bodyLarge, color = palette.onBackground)
-            Spacer(Modifier.height(4.dp))
-            Text("Completed · ${post.activityTitle}", style = MaterialTheme.typography.labelLarge, color = palette.highlight)
-            Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
@@ -547,87 +595,108 @@ private fun CommunityPostCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun CreateGroupDialog(
     onDismiss: () -> Unit,
     onCreate: (name: String, category: String, description: String, isPublic: Boolean, members: List<String>) -> Unit,
 ) {
     val palette = LocalBtsPalette.current
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var name by remember { mutableStateOf("") }
     var category by remember { mutableStateOf(InterestTags.all.first()) }
     var description by remember { mutableStateOf("") }
     var isPublic by remember { mutableStateOf(true) }
     var membersCsv by remember { mutableStateOf("") }
 
-    AlertDialog(
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text("Create group") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Group name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = fieldColors(),
-                )
-                Text("Category", style = MaterialTheme.typography.labelLarge, color = palette.onSurfaceMuted)
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    InterestTags.all.forEach { tag ->
-                        FilterChip(
-                            selected = category == tag,
-                            onClick = { category = tag },
-                            label = { Text(tag) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = palette.primaryContainer,
-                                selectedLabelColor = palette.primary,
-                            ),
-                        )
-                    }
-                }
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = fieldColors(),
-                )
-                OutlinedTextField(
-                    value = membersCsv,
-                    onValueChange = { membersCsv = it },
-                    label = { Text("Add members (@user1, @user2)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = fieldColors(),
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text("Public (discoverable)", color = palette.onBackground)
-                    Switch(checked = isPublic, onCheckedChange = { isPublic = it })
+        sheetState = sheetState,
+        containerColor = palette.surface,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Text(
+                "New group",
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = palette.onBackground,
+            )
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = fieldColors(),
+            )
+            Text("Category", style = MaterialTheme.typography.labelLarge, color = palette.onSurfaceMuted)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                InterestTags.all.forEach { tag ->
+                    FilterChip(
+                        selected = category == tag,
+                        onClick = { category = tag },
+                        label = { Text(tag) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = palette.primaryContainer,
+                            selectedLabelColor = palette.primary,
+                        ),
+                    )
                 }
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val members = membersCsv
-                        .split(',', ' ')
-                        .map { it.trim().removePrefix("@") }
-                        .filter { it.isNotBlank() }
-                    onCreate(name, category, description, isPublic, members)
-                },
-                enabled = name.isNotBlank(),
-            ) { Text("Create") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        },
-    )
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Short blurb") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = fieldColors(),
+            )
+            OutlinedTextField(
+                value = membersCsv,
+                onValueChange = { membersCsv = it },
+                label = { Text("Invite @users") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = fieldColors(),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Public", color = palette.onBackground)
+                Switch(checked = isPublic, onCheckedChange = { isPublic = it })
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel", color = palette.onSurfaceMuted)
+                }
+                TextButton(
+                    onClick = {
+                        val members = membersCsv
+                            .split(',', ' ')
+                            .map { it.trim().removePrefix("@") }
+                            .filter { it.isNotBlank() }
+                        onCreate(name.trim(), category, description.trim(), isPublic, members)
+                    },
+                    enabled = name.isNotBlank(),
+                ) {
+                    Text("Create", color = palette.primary)
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+    }
 }

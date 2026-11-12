@@ -29,7 +29,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.breakthescroll.app.R
 import com.breakthescroll.app.ui.components.engagement.EngagementTimerModal
 import com.breakthescroll.app.ui.components.navigation.PulsingStartFab
-import com.breakthescroll.app.ui.components.navigation.StartResetSheet
 import com.breakthescroll.app.ui.model.BuddyScreenContext
 import com.breakthescroll.app.ui.model.FeedMode
 import com.breakthescroll.app.ui.screens.ActivitiesScreen
@@ -60,13 +59,12 @@ fun BreakTheScrollApp(
 ) {
     val palette = LocalBtsPalette.current
     var destination by remember { mutableStateOf(AppDestination.Activities) }
-    var showStartSheet by remember { mutableStateOf(false) }
     var editingInterests by remember { mutableStateOf(false) }
 
     val darkTheme by viewModel.darkTheme.collectAsStateWithLifecycle()
     val buddyMood by viewModel.buddyMood.collectAsStateWithLifecycle()
     val feedMode by viewModel.feedMode.collectAsStateWithLifecycle()
-    val hybridDeck by viewModel.hybridDeck.collectAsStateWithLifecycle()
+    val forYouDeck by viewModel.forYouDeck.collectAsStateWithLifecycle()
     val serendipity by viewModel.serendipity.collectAsStateWithLifecycle()
     val habits by viewModel.habits.collectAsStateWithLifecycle()
     val progress by viewModel.progress.collectAsStateWithLifecycle()
@@ -83,7 +81,7 @@ fun BreakTheScrollApp(
     val completedChallengeId by viewModel.completedChallengeId.collectAsStateWithLifecycle()
     val showPreferences by viewModel.showPreferences.collectAsStateWithLifecycle()
 
-    val catalog = if (feedMode == FeedMode.Hybrid) hybridDeck else serendipity
+    val catalog = if (feedMode == FeedMode.ForYou) forYouDeck else serendipity
 
     if (!onboardingComplete || editingInterests) {
         OnboardingScreen(
@@ -123,8 +121,10 @@ fun BreakTheScrollApp(
                     if (item == AppDestination.Start) {
                         NavigationBarItem(
                             selected = false,
-                            onClick = { showStartSheet = true },
-                            icon = { PulsingStartFab(onClick = { showStartSheet = true }) },
+                            onClick = { viewModel.startInstantScrollBreaker() },
+                            icon = {
+                                PulsingStartFab(onClick = { viewModel.startInstantScrollBreaker() })
+                            },
                             label = {
                                 Text(stringResource(item.labelRes), color = palette.primary)
                             },
@@ -215,17 +215,6 @@ fun BreakTheScrollApp(
                 modifier = contentModifier,
             )
         }
-    }
-
-    if (showStartSheet) {
-        StartResetSheet(
-            onDismiss = { showStartSheet = false },
-            onComplete = {
-                showStartSheet = false
-                viewModel.completeReset()
-                destination = AppDestination.Activities
-            },
-        )
     }
 
     pendingEngagement?.let { challenge ->

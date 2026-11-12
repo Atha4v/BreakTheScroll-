@@ -177,7 +177,7 @@ fun ActivityCard(
                             )
                         }
                         Text(
-                            text = if (challenge.isPersonalized) "For you" else "Serendipity",
+                            text = if (challenge.isPersonalized) "For you" else "Random",
                             style = MaterialTheme.typography.labelMedium,
                             color = palette.onSurfaceMuted,
                             modifier = Modifier.padding(start = 4.dp),

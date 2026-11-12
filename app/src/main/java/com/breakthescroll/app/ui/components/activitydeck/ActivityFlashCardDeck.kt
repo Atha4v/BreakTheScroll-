@@ -188,7 +188,7 @@ fun ActivityFlashCardDeck(
     }
 
     val palette = LocalBtsPalette.current
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -222,12 +222,12 @@ fun ActivityFlashCardDeck(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(430.dp),
+                .weight(1f),
             contentAlignment = Alignment.Center,
         ) {
             if (topCard == null) {
@@ -238,13 +238,13 @@ fun ActivityFlashCardDeck(
                     .forEachIndexed { reverseIndex, challenge ->
                         val depth = stackedCards.size - reverseIndex
                         val scale = 1f - (depth * 0.05f)
-                        val yOffset = depth * 14f
+                        val yOffset = depth * 12f
                         key(challenge.id) {
                             ActivityCard(
                                 challenge = challenge,
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(400.dp)
+                                    .fillMaxSize()
+                                    .padding(bottom = 8.dp)
                                     .graphicsLayer {
                                         scaleX = scale
                                         scaleY = scale
@@ -264,8 +264,8 @@ fun ActivityFlashCardDeck(
                         challenge = topCard,
                         swipeProgress = swipeProgress,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(400.dp)
+                            .fillMaxSize()
+                            .padding(bottom = 8.dp)
                             .graphicsLayer {
                                 translationX = offset.value.x
                                 translationY = offset.value.y
@@ -302,8 +302,6 @@ fun ActivityFlashCardDeck(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
         DeckActionRow(
             enabled = topCard != null && interactionsEnabled,
             onPass = { programmaticSwipe(DeckSwipeAction.Pass) },
@@ -320,7 +318,9 @@ private fun DeckActionRow(
 ) {
     val palette = LocalBtsPalette.current
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -328,7 +328,7 @@ private fun DeckActionRow(
             OutlinedIconButton(
                 onClick = onPass,
                 enabled = enabled,
-                modifier = Modifier.size(64.dp),
+                modifier = Modifier.size(60.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.outlinedIconButtonColors(
                     contentColor = palette.error,
@@ -338,10 +338,10 @@ private fun DeckActionRow(
                 Icon(
                     imageVector = Icons.Outlined.Close,
                     contentDescription = stringResource(R.string.action_pass),
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(26.dp),
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.action_pass),
                 style = MaterialTheme.typography.labelMedium,
@@ -353,7 +353,7 @@ private fun DeckActionRow(
             FilledIconButton(
                 onClick = onAccept,
                 enabled = enabled,
-                modifier = Modifier.size(72.dp),
+                modifier = Modifier.size(68.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = palette.primary,
@@ -365,10 +365,10 @@ private fun DeckActionRow(
                 Icon(
                     imageVector = Icons.Outlined.Check,
                     contentDescription = stringResource(R.string.action_accept),
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(30.dp),
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.action_accept),
                 style = MaterialTheme.typography.labelMedium,

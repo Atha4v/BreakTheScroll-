@@ -35,7 +35,7 @@ import com.breakthescroll.app.data.local.entity.UserStatsEntity
         SquadGroupEntity::class,
         GroupMemberEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class BreakTheScrollDatabase : RoomDatabase() {
