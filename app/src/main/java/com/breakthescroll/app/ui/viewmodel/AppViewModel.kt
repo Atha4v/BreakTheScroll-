@@ -225,7 +225,7 @@ class AppViewModel(private val repository: AppRepository) : ViewModel() {
 
     fun addHabit(title: String, cadence: String) {
         viewModelScope.launch {
-            val accent = if (darkTheme.value) 0xFF10B981.toInt() else 0xFFC68642.toInt()
+            val accent = if (darkTheme.value) 0xFFF0875A.toInt() else 0xFFD2562E.toInt()
             repository.addHabit(title, cadence, accent)
         }
     }

@@ -148,7 +148,7 @@ fun EngagementTimerModal(
                     brush = Brush.verticalGradient(
                         colors = listOf(
                             palette.background,
-                            if (palette.isDark) Color(0xFF132033) else Color(0xFFF1F5F9),
+                            palette.surfaceElevated,
                             palette.primaryContainer.copy(alpha = if (palette.isDark) 0.55f else 0.45f),
                             palette.background,
                         ),

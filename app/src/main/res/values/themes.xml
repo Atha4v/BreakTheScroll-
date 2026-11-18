@@ -2,9 +2,9 @@
 <resources>
     <style name="Theme.BreakTheScroll" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">#1E293B</item>
+        <item name="android:navigationBarColor">#1C1A1F</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
-        <item name="android:windowBackground">#0F172A</item>
+        <item name="android:windowBackground">#121114</item>
     </style>
 </resources>

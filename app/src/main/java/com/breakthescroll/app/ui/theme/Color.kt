@@ -4,33 +4,33 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-// Light — wellness copper/gold
-val LightBackground = Color(0xFFF8FAFC)
-val LightSurface = Color(0xFFFFFFFF)
-val LightSurfaceElevated = Color(0xFFF1F5F9)
-val BadgerCharcoal = Color(0xFF1E293B)
-val BadgerCharcoalMuted = Color(0xFF64748B)
-val ResilientCopper = Color(0xFFC68642)
-val ResilientCopperContainer = Color(0xFFF3E0C8)
-val BadgerGold = Color(0xFFD9A06F)
-val BadgerGoldContainer = Color(0xFFF8ECDF)
-val LightBorder = Color(0xFFE2E8F0)
+// Light — "Porcelain": warm paper, ink type, ember accent
+val Porcelain = Color(0xFFF7F4EF)
+val PorcelainSurface = Color(0xFFFFFFFF)
+val PorcelainElevated = Color(0xFFEFEAE3)
+val Ink = Color(0xFF1B1A1F)
+val InkMuted = Color(0xFF6E6A72)
+val PorcelainBorder = Color(0xFFE5DFD6)
+val Ember = Color(0xFFD2562E)
+val EmberContainer = Color(0xFFF8E3D9)
+val Brass = Color(0xFFA9824B)
+val BrassContainer = Color(0xFFF2E8D8)
 
-// Dark — calm slate/mint
-val DeepSlate = Color(0xFF0F172A)
-val Obsidian = Color(0xFF1E293B)
-val ObsidianElevated = Color(0xFF273549)
-val SoftFrost = Color(0xFFF8FAFC)
-val SoftFrostMuted = Color(0xFF94A3B8)
-val SereneMint = Color(0xFF10B981)
-val SereneMintContainer = Color(0xFF064E3B)
-val WarmAmber = Color(0xFFF59E0B)
-val WarmAmberContainer = Color(0xFF78350F)
-val DarkBorder = Color(0xFF334155)
+// Dark — "Graphite": warm near-black, soft bone type, apricot accent
+val Graphite = Color(0xFF121114)
+val GraphiteSurface = Color(0xFF1C1A1F)
+val GraphiteElevated = Color(0xFF26232A)
+val Bone = Color(0xFFF3EFE8)
+val BoneMuted = Color(0xFF9E99A3)
+val GraphiteBorder = Color(0xFF302D35)
+val Apricot = Color(0xFFF0875A)
+val ApricotContainer = Color(0xFF3D2219)
+val Champagne = Color(0xFFE2C28E)
+val ChampagneContainer = Color(0xFF3A2F1E)
 
-val PassCoral = Color(0xFFF87171)
-val PassCoralContainerLight = Color(0xFFFEE2E2)
-val PassCoralContainerDark = Color(0xFF7F1D1D)
+val PassRose = Color(0xFFE5675F)
+val PassRoseContainerLight = Color(0xFFFBE4E2)
+val PassRoseContainerDark = Color(0xFF3E1D1B)
 val BuddyBadgerFur = Color(0xFF3F2A1D)
 val BuddyBadgerCream = Color(0xFFF5E6D3)
 val BuddyBadgerStripe = Color(0xFFF8FAFC)
@@ -54,46 +54,47 @@ data class BtsPalette(
 )
 
 val LightPalette = BtsPalette(
-    background = LightBackground,
-    surface = LightSurface,
-    surfaceElevated = LightSurfaceElevated,
-    primary = ResilientCopper,
-    primaryContainer = ResilientCopperContainer,
-    highlight = BadgerGold,
-    highlightContainer = BadgerGoldContainer,
-    onBackground = BadgerCharcoal,
-    onSurfaceMuted = BadgerCharcoalMuted,
-    border = LightBorder,
-    error = PassCoral,
-    errorContainer = PassCoralContainerLight,
+    background = Porcelain,
+    surface = PorcelainSurface,
+    surfaceElevated = PorcelainElevated,
+    primary = Ember,
+    primaryContainer = EmberContainer,
+    highlight = Brass,
+    highlightContainer = BrassContainer,
+    onBackground = Ink,
+    onSurfaceMuted = InkMuted,
+    border = PorcelainBorder,
+    error = PassRose,
+    errorContainer = PassRoseContainerLight,
     onPrimary = Color.White,
     isDark = false,
 )
 
 val DarkPalette = BtsPalette(
-    background = DeepSlate,
-    surface = Obsidian,
-    surfaceElevated = ObsidianElevated,
-    primary = SereneMint,
-    primaryContainer = SereneMintContainer,
-    highlight = WarmAmber,
-    highlightContainer = WarmAmberContainer,
-    onBackground = SoftFrost,
-    onSurfaceMuted = SoftFrostMuted,
-    border = DarkBorder,
-    error = PassCoral,
-    errorContainer = PassCoralContainerDark,
-    onPrimary = DeepSlate,
+    background = Graphite,
+    surface = GraphiteSurface,
+    surfaceElevated = GraphiteElevated,
+    primary = Apricot,
+    primaryContainer = ApricotContainer,
+    highlight = Champagne,
+    highlightContainer = ChampagneContainer,
+    onBackground = Bone,
+    onSurfaceMuted = BoneMuted,
+    border = GraphiteBorder,
+    error = PassRose,
+    errorContainer = PassRoseContainerDark,
+    onPrimary = Graphite,
     isDark = true,
 )
 
 val LocalBtsPalette = staticCompositionLocalOf { DarkPalette }
 
-// Compatibility aliases for older call sites during migration
+// Compatibility aliases for older call sites
+val SoftFrost = Bone
 val SurfaceNeutral get() = DarkPalette.background
 val ContainerWhite get() = DarkPalette.surface
 val PrimaryEmerald get() = DarkPalette.primary
-val PrimaryEmeraldDark get() = SereneMint
+val PrimaryEmeraldDark get() = Apricot
 val PrimaryEmeraldContainer get() = DarkPalette.primaryContainer
 val SecondaryAmber get() = DarkPalette.highlight
 val SecondaryAmberContainer get() = DarkPalette.highlightContainer
